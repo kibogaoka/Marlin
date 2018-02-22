@@ -217,6 +217,7 @@ typedef struct SettingsDataStruct {
   //
   uint16_t tmc_stepper_current[11];                     // M906 X Y Z X2 Y2 Z2 E0 E1 E2 E3 E4
   int16_t tmc_sgt[XYZ];                                 // M914 X Y Z
+  uint16_t tmc_homing_stepper_current[6];               // M916 X Y Z X2 Y2 Z2
 
   //
   // LIN_ADVANCE
