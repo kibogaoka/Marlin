@@ -89,6 +89,9 @@
   #else
     #if ENABLED(HAVE_TMC2130) && ENABLED(X_IS_TMC2130)
       extern TMC2130Stepper stepperX;
+      #if ENABLED(SENSORLESS_HOMING) && defined(X_HOMING_SENSITIVITY)
+        extern uint16_t stepperX_homing_current;
+      #endif
     #elif ENABLED(HAVE_TMC2208) && ENABLED(X_IS_TMC2208)
       extern TMC2208Stepper stepperX;
     #endif
@@ -122,6 +125,9 @@
   #else
     #if ENABLED(HAVE_TMC2130) && ENABLED(Y_IS_TMC2130)
       extern TMC2130Stepper stepperY;
+      #if ENABLED(SENSORLESS_HOMING) && defined(Y_HOMING_SENSITIVITY)
+        extern uint16_t stepperY_homing_current;
+      #endif
     #elif ENABLED(HAVE_TMC2208) && ENABLED(Y_IS_TMC2208)
       extern TMC2208Stepper stepperY;
     #endif
@@ -155,6 +161,9 @@
   #else
     #if ENABLED(HAVE_TMC2130) && ENABLED(Z_IS_TMC2130)
       extern TMC2130Stepper stepperZ;
+      #if ENABLED(SENSORLESS_HOMING) && defined(Z_HOMING_SENSITIVITY)
+        extern uint16_t stepperZ_homing_current;
+      #endif
     #elif ENABLED(HAVE_TMC2208) && ENABLED(Z_IS_TMC2208)
       extern TMC2208Stepper stepperZ;
     #endif
@@ -189,6 +198,9 @@
     #else
       #if ENABLED(HAVE_TMC2130) && ENABLED(X2_IS_TMC2130)
         extern TMC2130Stepper stepperX2;
+        #if ENABLED(SENSORLESS_HOMING) && defined(X_HOMING_SENSITIVITY)
+          extern uint16_t stepperX2_homing_current;
+        #endif
       #elif ENABLED(HAVE_TMC2208) && ENABLED(X2_IS_TMC2208)
         extern TMC2208Stepper stepperX2;
       #endif
@@ -224,6 +236,9 @@
     #else
       #if ENABLED(HAVE_TMC2130) && ENABLED(Y2_IS_TMC2130)
         extern TMC2130Stepper stepperY2;
+        #if ENABLED(SENSORLESS_HOMING) && defined(Y_HOMING_SENSITIVITY)
+          extern uint16_t stepperY2_homing_current;
+        #endif
       #elif ENABLED(HAVE_TMC2208) && ENABLED(Y2_IS_TMC2208)
         extern TMC2208Stepper stepperY2;
       #endif
@@ -259,6 +274,9 @@
     #else
       #if ENABLED(HAVE_TMC2130) && ENABLED(Z2_IS_TMC2130)
         extern TMC2130Stepper stepperZ2;
+        #if ENABLED(SENSORLESS_HOMING) && defined(Z_HOMING_SENSITIVITY)
+          extern uint16_t stepperZ2_homing_current;
+        #endif
       #elif ENABLED(HAVE_TMC2208) && ENABLED(Z2_IS_TMC2208)
         extern TMC2208Stepper stepperZ2;
       #endif

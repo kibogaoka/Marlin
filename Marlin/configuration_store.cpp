@@ -37,7 +37,7 @@
  */
 
 // Change EEPROM version if the structure changes
-#define EEPROM_VERSION "V51"
+#define EEPROM_VERSION "V52"
 #define EEPROM_OFFSET 100
 
 // Check the integrity of data offsets.
@@ -764,6 +764,47 @@ void MarlinSettings::postprocess() {
     EEPROM_WRITE(thrs);
 
     //
+    // TMC2130 Stepper current during sensorless homing
+    //
+    uint16_t homing_current[6] = {
+      #if ENABLED(SENSORLESS_HOMING)
+        #if ENABLED(X_IS_TMC2130) && defined(X_HOMING_SENSITIVITY)
+          stepperX_homing_current,
+        #else
+          0,
+        #endif
+        #if ENABLED(Y_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
+          stepperY_homing_current,
+        #else
+          0,
+        #endif
+        #if ENABLED(Z_IS_TMC2130) && defined(Z_HOMING_SENSITIVITY)
+          stepperZ_homing_current,
+        #else
+          0,
+        #endif
+        #if ENABLED(X2_IS_TMC2130) && defined(X_HOMING_SENSITIVITY)
+          stepperX2_homing_current,
+        #else
+          0,
+        #endif
+        #if ENABLED(Y2_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
+          stepperY2_homing_current,
+        #else
+          0,
+        #endif
+        #if ENABLED(Z2_IS_TMC2130) && defined(Z_HOMING_SENSITIVITY)
+          stepperZ2_homing_current,
+        #else
+          0
+        #endif
+      #else
+        0
+      #endif
+    };
+    EEPROM_WRITE(homing_current);
+
+    //
     // Linear Advance
     //
 
@@ -1302,6 +1343,34 @@ void MarlinSettings::postprocess() {
       #endif
 
       //
+      // TMC2130 stepper current during sensorless homing
+      //
+      uint16_t homing_current[6];
+      EEPROM_READ(homing_current);
+      #if ENABLED(SENSORLESS_HOMING)
+        if (!validating) {
+          #if ENABLED(X_IS_TMC2130) && defined(X_HOMING_SENSITIVITY)
+            stepperX_homing_current = homing_current[0];
+          #endif
+          #if ENABLED(Y_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
+            stepperY_homing_current = homing_current[1];
+          #endif
+          #if ENABLED(Z_IS_TMC2130) && defined(Z_HOMING_SENSITIVITY)
+            stepperZ_homing_current = homing_current[2];
+          #endif
+          #if ENABLED(X2_IS_TMC2130) && defined(X_HOMING_SENSITIVITY)
+            stepperX2_homing_current = homing_current[3];
+          #endif
+          #if ENABLED(Y2_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
+            stepperY2_homing_current = homing_current[4];
+          #endif
+          #if ENABLED(Z2_IS_TMC2130) && defined(Z_HOMING_SENSITIVITY)
+            stepperZ2_homing_current = homing_current[5];
+          #endif
+        }
+      #endif
+
+      //
       // Linear Advance
       //
 
@@ -1769,25 +1838,55 @@ void MarlinSettings::reset() {
     #ifdef X_HOMING_SENSITIVITY
       #if ENABLED(X_IS_TMC2130)
         stepperX.sgt(X_HOMING_SENSITIVITY);
+        #ifdef X_HOMING_CURRENT
+          stepperX_homing_current = X_HOMING_CURRENT;
+        #else
+          stepperX_homing_current = X_CURRENT;
+        #endif
       #endif
       #if ENABLED(X2_IS_TMC2130)
         stepperX2.sgt(X_HOMING_SENSITIVITY);
+        #ifdef X2_HOMING_CURRENT
+          stepperX2_homing_current = X2_HOMING_CURRENT;
+        #else
+          stepperX2_homing_current = X2_CURRENT;
+        #endif
       #endif
     #endif
     #ifdef Y_HOMING_SENSITIVITY
       #if ENABLED(Y_IS_TMC2130)
         stepperY.sgt(Y_HOMING_SENSITIVITY);
+        #ifdef Y_HOMING_CURRENT
+          stepperY_homing_current = Y_HOMING_CURRENT;
+        #else
+          stepperY_homing_current = Y_CURRENT;
+        #endif
       #endif
       #if ENABLED(Y2_IS_TMC2130)
         stepperY2.sgt(Y_HOMING_SENSITIVITY);
+        #ifdef Y2_HOMING_CURRENT
+          stepperY2_homing_current = Y2_HOMING_CURRENT;
+        #else
+          stepperY2_homing_current = Y2_CURRENT;
+        #endif
       #endif
     #endif
     #ifdef Z_HOMING_SENSITIVITY
       #if ENABLED(Z_IS_TMC2130)
         stepperZ.sgt(Z_HOMING_SENSITIVITY);
+        #ifdef Z_HOMING_CURRENT
+          stepperZ_homing_current = Z_HOMING_CURRENT;
+        #else
+          stepperZ_homing_current = Z_CURRENT;
+        #endif
       #endif
       #if ENABLED(Z2_IS_TMC2130)
         stepperZ2.sgt(Z_HOMING_SENSITIVITY);
+        #ifdef Z2_HOMING_CURRENT
+          stepperZ2_homing_current = Z2_HOMING_CURRENT;
+        #else
+          stepperZ2_homing_current = Z2_CURRENT;
+        #endif
       #endif
     #endif
   #endif
@@ -2318,10 +2417,10 @@ void MarlinSettings::reset() {
       SERIAL_EOL();
     #endif
 
-    /**
-     * TMC2130 Sensorless homing thresholds
-     */
     #if ENABLED(SENSORLESS_HOMING)
+      /**
+       * TMC2130 Sensorless homing thresholds
+       */
       if (!forReplay) {
         CONFIG_ECHO_START;
         SERIAL_ECHOLNPGM("Sensorless homing threshold:");
@@ -2350,6 +2449,41 @@ void MarlinSettings::reset() {
         #endif
         #if ENABLED(Z2_IS_TMC2130)
           SERIAL_ECHOPAIR(" Z2 ", stepperZ2.sgt());
+        #endif
+      #endif
+      SERIAL_EOL();
+
+      /**
+       * TMC2130 Sensorless homing stepper currents
+       */
+      if (!forReplay) {
+        CONFIG_ECHO_START;
+        SERIAL_ECHOLNPGM("Stepper driver current during sensorless homing:");
+      }
+      CONFIG_ECHO_START;
+      SERIAL_ECHOPGM("  M916");
+      #ifdef X_HOMING_SENSITIVITY
+        #if ENABLED(X_IS_TMC2130)
+          SERIAL_ECHOPAIR(" X", stepperX_homing_current);
+        #endif
+        #if ENABLED(X2_IS_TMC2130)
+          SERIAL_ECHOPAIR(" X2 ", stepperX2_homing_current);
+        #endif
+      #endif
+      #ifdef Y_HOMING_SENSITIVITY
+        #if ENABLED(Y_IS_TMC2130)
+          SERIAL_ECHOPAIR(" Y", stepperY_homing_current);
+        #endif
+        #if ENABLED(Y2_IS_TMC2130)
+          SERIAL_ECHOPAIR(" Y2 ", stepperY2_homing_current);
+        #endif
+      #endif
+      #ifdef Z_HOMING_SENSITIVITY
+        #if ENABLED(Z_IS_TMC2130)
+          SERIAL_ECHOPAIR(" Z", stepperZ_homing_current);
+        #endif
+        #if ENABLED(Z2_IS_TMC2130)
+          SERIAL_ECHOPAIR(" Z2 ", stepperZ2_homing_current);
         #endif
       #endif
       SERIAL_EOL();

@@ -174,6 +174,34 @@
     _TMC2130_DEFINE(E4);
   #endif
 
+  // TMC2130 Sensorless homing currents 
+  #if ENABLED(SENSORLESS_HOMING)
+    #ifdef X_HOMING_SENSITIVITY
+      #if ENABLED(X_IS_TMC2130)
+        uint16_t stepperX_homing_current;
+      #endif
+      #if ENABLED(X2_IS_TMC2130)
+        uint16_t stepperX2_homing_current;
+      #endif
+    #endif
+    #ifdef Y_HOMING_SENSITIVITY
+      #if ENABLED(Y_IS_TMC2130)
+        uint16_t stepperY_homing_current;
+      #endif
+      #if ENABLED(Y2_IS_TMC2130)
+        uint16_t stepperY2_homing_current;
+      #endif
+    #endif
+    #ifdef Z_HOMING_SENSITIVITY
+      #if ENABLED(Z_IS_TMC2130)
+        uint16_t stepperZ_homing_current;
+      #endif
+      #if ENABLED(Z2_IS_TMC2130)
+        uint16_t stepperZ2_homing_current;
+      #endif
+    #endif
+  #endif // SENSORLESS_HOMING
+  
   // Use internal reference voltage for current calculations. This is the default.
   // Following values from Trinamic's spreadsheet with values for a NEMA17 (42BYGHW609)
   // https://www.trinamic.com/products/integrated-circuits/details/tmc2130/

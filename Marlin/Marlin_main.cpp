@@ -230,6 +230,7 @@
  * M912 - Clear stepper driver overtemperature pre-warn condition flag. (Requires HAVE_TMC2130 or HAVE_TMC2208)
  * M913 - Set HYBRID_THRESHOLD speed. (Requires HYBRID_THRESHOLD)
  * M914 - Set SENSORLESS_HOMING sensitivity. (Requires SENSORLESS_HOMING)
+ * M916 - Set SENSORLESS_HOMING stepper currents. (Requires SENSORLESS_HOMING)
  *
  * M360 - SCARA calibration: Move to cal-position ThetaA (0 deg calibration)
  * M361 - SCARA calibration: Move to cal-position ThetaB (90 deg calibration - steps per degree)
@@ -2876,16 +2877,38 @@ static void do_homing_move(const AxisEnum axis, const float distance, const floa
     if (axis == Z_AXIS) probing_pause(true);
   #endif
 
-  // Disable stealthChop if used. Enable diag1 pin on driver.
+  // Disable stealthChop if used. Enable diag1 pin on driver. Set homing current.
   #if ENABLED(SENSORLESS_HOMING)
+    uint16_t normal_current, normal_current_2;
     #if ENABLED(X_IS_TMC2130) && defined(X_HOMING_SENSITIVITY)
-      if (axis == X_AXIS) tmc_sensorless_homing(stepperX);
+      if (axis == X_AXIS) {
+        normal_current = stepperX.getCurrent();
+        tmc_sensorless_homing(stepperX, stepperX_homing_current);
+        #if ENABLED(X2_IS_TMC2130)
+          normal_current_2 = stepperX2.getCurrent();
+          tmc_sensorless_homing(stepperX2, stepperX2_homing_current);
+        #endif
+      }
     #endif
     #if ENABLED(Y_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
-      if (axis == Y_AXIS) tmc_sensorless_homing(stepperY);
+      if (axis == Y_AXIS){
+        normal_current = stepperY.getCurrent();
+        tmc_sensorless_homing(stepperY, stepperY_homing_current);
+        #if ENABLED(Y2_IS_TMC2130)
+          normal_current_2 = stepperY2.getCurrent();
+          tmc_sensorless_homing(stepperY2, stepperY2_homing_current);
+        #endif
+      }
     #endif
     #if ENABLED(Z_IS_TMC2130) && defined(Z_HOMING_SENSITIVITY)
-      if (axis == Z_AXIS) tmc_sensorless_homing(stepperZ);
+      if (axis == Z_AXIS) {
+        normal_current = stepperZ.getCurrent();
+        tmc_sensorless_homing(stepperZ, stepperZ_homing_current);
+        #if ENABLED(Z2_IS_TMC2130)
+          normal_current_2 = stepperZ2.getCurrent();
+          tmc_sensorless_homing(stepperZ2, stepperZ2_homing_current);
+        #endif
+      }
     #endif
   #endif
 
@@ -2915,16 +2938,31 @@ static void do_homing_move(const AxisEnum axis, const float distance, const floa
 
   endstops.hit_on_purpose();
 
-  // Re-enable stealthChop if used. Disable diag1 pin on driver.
+  // Re-enable stealthChop if used. Disable diag1 pin on driver. Restore normal current.
   #if ENABLED(SENSORLESS_HOMING)
     #if ENABLED(X_IS_TMC2130) && defined(X_HOMING_SENSITIVITY)
-      if (axis == X_AXIS) tmc_sensorless_homing(stepperX, false);
+      if (axis == X_AXIS) {
+        tmc_sensorless_homing(stepperX, normal_current, false);
+        #if ENABLED(X2_IS_TMC2130)
+          tmc_sensorless_homing(stepperX2, normal_current_2, false);
+        #endif
+      }
     #endif
     #if ENABLED(Y_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
-      if (axis == Y_AXIS) tmc_sensorless_homing(stepperY, false);
+      if (axis == Y_AXIS) {
+        tmc_sensorless_homing(stepperY, normal_current, false);
+        #if ENABLED(Y2_IS_TMC2130)
+          tmc_sensorless_homing(stepperY2, normal_current_2, false);
+        #endif
+      }
     #endif
     #if ENABLED(Z_IS_TMC2130) && defined(Z_HOMING_SENSITIVITY)
-      if (axis == Z_AXIS) tmc_sensorless_homing(stepperZ, false);
+      if (axis == Z_AXIS) {
+        tmc_sensorless_homing(stepperZ, normal_current, false);
+        #if ENABLED(Z2_IS_TMC2130)
+          tmc_sensorless_homing(stepperZ2, normal_current_2, false);
+        #endif
+      }
     #endif
   #endif
 
@@ -3619,11 +3657,22 @@ inline void gcode_G4() {
                 fr_mm_s = min(homing_feedrate(X_AXIS), homing_feedrate(Y_AXIS)) * SQRT(sq(mlratio) + 1.0);
 
     #if ENABLED(SENSORLESS_HOMING)
+      uint16_t normal_current_X, normal_current_Y, normal_current_X2, normal_current_Y2;
       #if ENABLED(X_IS_TMC2130) && defined(X_HOMING_SENSITIVITY)
-        tmc_sensorless_homing(stepperX);
+        normal_current_X = stepperX.getCurrent();
+        tmc_sensorless_homing(stepperX, stepperX_homing_current);
+        #if ENABLED(X2_IS_TMC2130)
+          normal_current_X2 = stepperX2.getCurrent();
+          tmc_sensorless_homing(stepperX2, stepperX2_homing_current);
+        #endif
       #endif
       #if ENABLED(Y_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
-        tmc_sensorless_homing(stepperY);
+        normal_current_Y = stepperY.getCurrent();
+        tmc_sensorless_homing(stepperY, stepperY_homing_current);
+        #if ENABLED(Y2_IS_TMC2130)
+          normal_current_Y2 = stepperY2.getCurrent();
+          tmc_sensorless_homing(stepperY2, stepperY2_homing_current);
+        #endif
       #endif
     #endif
 
@@ -3633,10 +3682,16 @@ inline void gcode_G4() {
 
     #if ENABLED(SENSORLESS_HOMING)
       #if ENABLED(X_IS_TMC2130) && defined(X_HOMING_SENSITIVITY)
-        tmc_sensorless_homing(stepperX, false);
+        tmc_sensorless_homing(stepperX, normal_current_X, false);
+        #if ENABLED(X2_IS_TMC2130)
+          tmc_sensorless_homing(stepperX2, normal_current_X2, false);
+        #endif
       #endif
       #if ENABLED(Y_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
-        tmc_sensorless_homing(stepperY, false);
+        tmc_sensorless_homing(stepperY, normal_current_Y, false);
+        #if ENABLED(Y2_IS_TMC2130)
+          tmc_sensorless_homing(stepperY2, normal_current_Y2, false);
+        #endif
       #endif
       safe_delay(500); // Short delay needed to settle
     #endif
@@ -10639,10 +10694,10 @@ inline void gcode_M502() {
     }
   #endif // HYBRID_THRESHOLD
 
+  #if ENABLED(SENSORLESS_HOMING)
   /**
    * M914: Set SENSORLESS_HOMING sensitivity.
    */
-  #if ENABLED(SENSORLESS_HOMING)
     inline void gcode_M914() {
       #define TMC_SET_GET_SGT(P,Q) do { \
         if (parser.seen(axis_codes[P##_AXIS])) tmc_set_sgt(stepper##Q, extended_axis_codes[TMC_##Q], parser.value_int()); \
@@ -10670,6 +10725,41 @@ inline void gcode_M502() {
         #endif
         #if ENABLED(Z2_IS_TMC2130)
           TMC_SET_GET_SGT(Z,Z2);
+        #endif
+      #endif
+    }
+
+    /**
+     * M916: Set SENSORLESS_HOMING stepper current.
+     */
+    inline void gcode_M916() {
+      #define GET_SET_HOMING_CURRENT(P, Q) do { \
+        if (parser.seen(axis_codes[P##_AXIS])) stepper##Q##_homing_current = parser.value_int(); \
+        SERIAL_ECHO(#Q); \
+        SERIAL_ECHOLNPAIR(" axis driver sensorless homing current: ", stepper##Q##_homing_current); } while(0)
+
+      #ifdef X_HOMING_SENSITIVITY
+        #if ENABLED(X_IS_TMC2130) || ENABLED(IS_TRAMS)
+          GET_SET_HOMING_CURRENT(X,X);
+        #endif
+        #if ENABLED(X2_IS_TMC2130)
+          GET_SET_HOMING_CURRENT(X,X2);
+        #endif
+      #endif
+      #ifdef Y_HOMING_SENSITIVITY
+       #if ENABLED(Y_IS_TMC2130) || ENABLED(IS_TRAMS)
+          GET_SET_HOMING_CURRENT(Y,Y);
+        #endif
+        #if ENABLED(Y2_IS_TMC2130)
+          GET_SET_HOMING_CURRENT(Y,Y2);
+        #endif
+      #endif
+      #ifdef Z_HOMING_SENSITIVITY
+        #if ENABLED(Z_IS_TMC2130) || ENABLED(IS_TRAMS)
+          GET_SET_HOMING_CURRENT(Z,Z);
+        #endif
+        #if ENABLED(Z2_IS_TMC2130)
+          GET_SET_HOMING_CURRENT(Z,Z2);
         #endif
       #endif
     }
@@ -11970,6 +12060,7 @@ void process_parsed_command() {
         #endif
         #if ENABLED(SENSORLESS_HOMING)
           case 914: gcode_M914(); break;                          // M914: Set SENSORLESS_HOMING sensitivity.
+          case 916: gcode_M916(); break;                          // M916: Set SENSORLESS_HOMING stepper current.
         #endif
         #if ENABLED(TMC_Z_CALIBRATION)
           case 915: gcode_M915(); break;                          // M915: TMC Z axis calibration routine
