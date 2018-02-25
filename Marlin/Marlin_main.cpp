@@ -2108,15 +2108,15 @@ static void clean_up_after_endstop_or_probe_move() {
 
     if (endstops.z_probe_enabled == deploy) return false;
 
-    // Fix-mounted probe should only raise for deploy
-    #if ENABLED(FIX_MOUNTED_PROBE)
-      #define RAISE_COND deploy
-    #else
-      #define RAISE_COND true
-    #endif
-
     // Make room for probe to deploy (or stow)
-    if (RAISE_COND) do_probe_raise(_Z_CLEARANCE_DEPLOY_PROBE);
+    // Fix-mounted probe should only raise for deploy
+    if (
+      #if ENABLED(FIX_MOUNTED_PROBE)
+        deploy
+      #else
+        true
+      #endif
+    ) do_probe_raise(max(Z_CLEARANCE_BETWEEN_PROBES, Z_CLEARANCE_DEPLOY_PROBE));
 
     #if ENABLED(Z_PROBE_SLED) || ENABLED(Z_PROBE_ALLEN_KEY)
       #if ENABLED(Z_PROBE_SLED)
@@ -4023,8 +4023,8 @@ inline void gcode_G28(const bool always_home_all) {
 
   // Disable the leveling matrix before homing
   #if HAS_LEVELING
-    #if ENABLED(AUTO_BED_LEVELING_UBL)
-      const bool ubl_state_at_entry = planner.leveling_active;
+    #if ENABLED(RESTORE_LEVELING_AFTER_G28)
+      const bool leveling_state_at_entry = planner.leveling_active;
     #endif
     set_bed_leveling_enabled(false);
   #endif
@@ -4159,8 +4159,8 @@ inline void gcode_G28(const bool always_home_all) {
     do_blocking_move_to_z(delta_clip_start_height);
   #endif
 
-  #if ENABLED(AUTO_BED_LEVELING_UBL)
-    set_bed_leveling_enabled(ubl_state_at_entry);
+  #if ENABLED(RESTORE_LEVELING_AFTER_G28)
+    set_bed_leveling_enabled(leveling_state_at_entry);
   #endif
 
   clean_up_after_endstop_or_probe_move();
@@ -6461,7 +6461,7 @@ inline void gcode_M17() {
   }
 
   static float resume_position[XYZE];
-  static int8_t did_pause_print = 0;
+  int8_t did_pause_print = 0;
 
   #if HAS_BUZZER
     static void filament_change_beep(const int8_t max_beep_count, const bool init=false) {
@@ -8434,7 +8434,7 @@ inline void gcode_M18_M84() {
     }
 
     #if ENABLED(AUTO_BED_LEVELING_UBL) && ENABLED(ULTIPANEL)  // Only needed with an LCD
-      ubl.lcd_map_control = defer_return_to_status = false;
+      if (ubl.lcd_map_control) ubl.lcd_map_control = defer_return_to_status = false;
     #endif
   }
 }
@@ -10513,33 +10513,18 @@ inline void gcode_M502() {
 
 #if ENABLED(LIN_ADVANCE)
   /**
-   * M900: Set and/or Get advance K factor and WH/D ratio
+   * M900: Set and/or Get advance K factor
    *
    *  K<factor>                  Set advance K factor
-   *  R<ratio>                   Set ratio directly (overrides WH/D)
-   *  W<width> H<height> D<diam> Set ratio from WH/D
    */
   inline void gcode_M900() {
     stepper.synchronize();
 
     const float newK = parser.floatval('K', -1);
-    if (newK >= 0) planner.extruder_advance_k = newK;
-
-    float newR = parser.floatval('R', -1);
-    if (newR < 0) {
-      const float newD = parser.floatval('D', -1),
-                  newW = parser.floatval('W', -1),
-                  newH = parser.floatval('H', -1);
-      if (newD >= 0 && newW >= 0 && newH >= 0)
-        newR = newD ? (newW * newH) / (sq(newD * 0.5) * M_PI) : 0;
-    }
-    if (newR >= 0) planner.advance_ed_ratio = newR;
+    if (newK >= 0) planner.extruder_advance_K = newK;
 
     SERIAL_ECHO_START();
-    SERIAL_ECHOPAIR("Advance K=", planner.extruder_advance_k);
-    SERIAL_ECHOPGM(" E/D=");
-    const float ratio = planner.advance_ed_ratio;
-    if (ratio) SERIAL_ECHO(ratio); else SERIAL_ECHOPGM("Auto");
+    SERIAL_ECHOPAIR("Advance K=", planner.extruder_advance_K);
     SERIAL_EOL();
   }
 #endif // LIN_ADVANCE
@@ -13503,7 +13488,7 @@ void manage_inactivity(bool ignore_stepper_queue/*=false*/) {
       disable_e_steppers();
     #endif
     #if ENABLED(AUTO_BED_LEVELING_UBL) && ENABLED(ULTIPANEL)  // Only needed with an LCD
-      ubl.lcd_map_control = defer_return_to_status = false;
+      if (ubl.lcd_map_control) ubl.lcd_map_control = defer_return_to_status = false;
     #endif
   }
 
