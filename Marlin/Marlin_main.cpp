@@ -2891,7 +2891,7 @@ static void do_homing_move(const AxisEnum axis, const float distance, const floa
       }
     #endif
     #if ENABLED(Y_IS_TMC2130) && defined(Y_HOMING_SENSITIVITY)
-      if (axis == Y_AXIS){
+      if (axis == Y_AXIS) {
         normal_current = stepperY.getCurrent();
         tmc_sensorless_homing(stepperY, stepperY_homing_current);
         #if ENABLED(Y2_IS_TMC2130)

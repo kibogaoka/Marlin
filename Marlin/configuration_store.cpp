@@ -795,7 +795,7 @@ void MarlinSettings::postprocess() {
           0,
         #endif
         #if ENABLED(Z2_IS_TMC2130) && defined(Z_HOMING_SENSITIVITY)
-          stepperZ2_homing_current,
+          stepperZ2_homing_current
         #else
           0
         #endif
