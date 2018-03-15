@@ -230,6 +230,7 @@
  * M912 - Clear stepper driver overtemperature pre-warn condition flag. (Requires HAVE_TMC2130 or HAVE_TMC2208)
  * M913 - Set HYBRID_THRESHOLD speed. (Requires HYBRID_THRESHOLD)
  * M914 - Set SENSORLESS_HOMING sensitivity. (Requires SENSORLESS_HOMING)
+ * M916 - Set SENSORLESS_HOMING stepper currents. (Requires SENSORLESS_HOMING)
  *
  * M360 - SCARA calibration: Move to cal-position ThetaA (0 deg calibration)
  * M361 - SCARA calibration: Move to cal-position ThetaB (90 deg calibration - steps per degree)
@@ -2828,31 +2829,58 @@ static void clean_up_after_endstop_or_probe_move() {
     switch (axis) {
       #if X_SENSORLESS
         case X_AXIS:
-          tmc_sensorless_homing(stepperX, enable);
+          stepperX.setSensorlessHoming(enable);
+          #if ENABLED(X2_IS_TMC2130)
+            stepperX2.setSensorlessHoming(enable);
+          #endif
           #if CORE_IS_XY && Y_SENSORLESS
-            tmc_sensorless_homing(stepperY, enable);
+            stepperY.setSensorlessHoming(enable);
+            #if ENABLED(Y2_IS_TMC2130)
+              stepperY2.setSensorlessHoming(enable);
+            #endif
           #elif CORE_IS_XZ && Z_SENSORLESS
-            tmc_sensorless_homing(stepperZ, enable);
+            stepperZ.setSensorlessHoming(enable);
+            #if ENABLED(Z2_IS_TMC2130)
+              stepperZ2.setSensorlessHoming(enable);
+            #endif
           #endif
           break;
       #endif
       #if Y_SENSORLESS
         case Y_AXIS:
-          tmc_sensorless_homing(stepperY, enable);
+          stepperY.setSensorlessHoming(enable);
+          #if ENABLED(Y2_IS_TMC2130)
+            stepperY2.setSensorlessHoming(enable);
+          #endif
           #if CORE_IS_XY && X_SENSORLESS
-            tmc_sensorless_homing(stepperX, enable);
+            stepperX.setSensorlessHoming(enable);
+            #if ENABLED(X2_IS_TMC2130)
+              stepperX2.setSensorlessHoming(enable);
+            #endif
           #elif CORE_IS_YZ && Z_SENSORLESS
-            tmc_sensorless_homing(stepperZ, enable);
+            stepperZ.setSensorlessHoming(enable);
+            #if ENABLED(Z2_IS_TMC2130)
+              stepperZ2.setSensorlessHoming(enable);
+            #endif
           #endif
           break;
       #endif
       #if Z_SENSORLESS
         case Z_AXIS:
-          tmc_sensorless_homing(stepperZ, enable);
+          stepperZ.setSensorlessHoming(enable);
+          #if ENABLED(Z2_IS_TMC2130)
+            stepperZ2.setSensorlessHoming(enable);
+          #endif
           #if CORE_IS_XZ && X_SENSORLESS
-            tmc_sensorless_homing(stepperX, enable);
+            stepperX.setSensorlessHoming(enable);
+            #if ENABLED(X2_IS_TMC2130)
+              stepperX2.setSensorlessHoming(enable);
+            #endif
           #elif CORE_IS_YZ && Y_SENSORLESS
-            tmc_sensorless_homing(stepperY, enable);
+            stepperY.setSensorlessHoming(enable);
+            #if ENABLED(Y2_IS_TMC2130)
+              stepperY2.setSensorlessHoming(enable);
+            #endif
           #endif
           break;
       #endif
@@ -10675,6 +10703,41 @@ inline void gcode_M502() {
         #endif
       #endif
     }
+
+    /**
+     * M916: Set SENSORLESS_HOMING stepper current.
+     */
+    inline void gcode_M916() {
+      #define GET_SET_HOMING_CURRENT(P, Q) do { \
+        if (parser.seen(axis_codes[P##_AXIS])) stepper##Q.setSensorlessHomingCurrent(parser.value_int()); \
+        SERIAL_ECHO(#Q); \
+        SERIAL_ECHOLNPAIR(" axis driver sensorless homing current: ", stepper##Q.getSensorlessHomingCurrent()); } while(0)
+
+      #ifdef X_HOMING_SENSITIVITY
+        #if ENABLED(X_IS_TMC2130) || ENABLED(IS_TRAMS)
+          GET_SET_HOMING_CURRENT(X,X);
+        #endif
+        #if ENABLED(X2_IS_TMC2130)
+          GET_SET_HOMING_CURRENT(X,X2);
+        #endif
+      #endif
+      #ifdef Y_HOMING_SENSITIVITY
+       #if ENABLED(Y_IS_TMC2130) || ENABLED(IS_TRAMS)
+          GET_SET_HOMING_CURRENT(Y,Y);
+        #endif
+        #if ENABLED(Y2_IS_TMC2130)
+          GET_SET_HOMING_CURRENT(Y,Y2);
+        #endif
+      #endif
+      #ifdef Z_HOMING_SENSITIVITY
+        #if ENABLED(Z_IS_TMC2130) || ENABLED(IS_TRAMS)
+          GET_SET_HOMING_CURRENT(Z,Z);
+        #endif
+        #if ENABLED(Z2_IS_TMC2130)
+          GET_SET_HOMING_CURRENT(Z,Z2);
+        #endif
+      #endif
+    }
   #endif // SENSORLESS_HOMING
 
   /**
@@ -11972,6 +12035,7 @@ void process_parsed_command() {
         #endif
         #if ENABLED(SENSORLESS_HOMING)
           case 914: gcode_M914(); break;                          // M914: Set SENSORLESS_HOMING sensitivity.
+          case 916: gcode_M916(); break;                          // M916: Set SENSORLESS_HOMING stepper current.
         #endif
         #if ENABLED(TMC_Z_CALIBRATION)
           case 915: gcode_M915(); break;                          // M915: TMC Z axis calibration routine

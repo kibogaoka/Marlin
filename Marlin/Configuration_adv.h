@@ -1163,15 +1163,22 @@
    * Higher values make the system LESS sensitive.
    * Lower value make the system MORE sensitive.
    * Too low values can lead to false positives, while too high values will collide the axis without triggering.
-   * It is advised to set X/Y/Z_HOME_BUMP_MM to 0.
    * M914 X/Y/Z to live tune the setting
+   *
+   * X/Y/Z_HOMING_CURRENT is used to set the stepper current during sensorless homing.
+   * Lower values make the axis collide with less force, which can reduce wear on the components.
+   * Too low values may make the motor too weak to accelerate the axis at all.
+   * M916 X/Y/Z to live tune the setting.
+   *
+   * It is advised to set X/Y/Z_HOME_BUMP_MM to 0.
    */
   //#define SENSORLESS_HOMING // TMC2130 only
 
   #if ENABLED(SENSORLESS_HOMING)
     #define X_HOMING_SENSITIVITY  8
     #define Y_HOMING_SENSITIVITY  8
-    #define Z_HOMING_SENSITIVITY  8
+    #define X_HOMING_CURRENT      500
+    #define Y_HOMING_CURRENT      500
   #endif
 
   /**

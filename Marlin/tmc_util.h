@@ -37,6 +37,28 @@ extern bool report_tmc_status;
 
 enum TMC_AxisEnum : char { TMC_X, TMC_X2, TMC_Y, TMC_Y2, TMC_Z, TMC_Z2, TMC_E0, TMC_E1, TMC_E2, TMC_E3, TMC_E4 };
 
+/**
+ * TMC2130 specific sensorless homing using stallGuard2.
+ * stallGuard2 only works when in spreadCycle mode.
+ * spreadCycle and stealthChop are mutually exclusive.
+ */
+#if ENABLED(SENSORLESS_HOMING)
+  class SensorlessTMC2130Stepper: public TMC2130Stepper {
+  public:
+    using TMC2130Stepper::TMC2130Stepper;
+    inline void setSensorlessHomingCurrent(uint16_t mA) { _homing_mA = mA; }
+    inline uint16_t getSensorlessHomingCurrent() const { return _homing_mA; }
+    void begin();
+    void stealthChop(bool enable);
+    inline bool stealthChop() { return TMC2130Stepper::stealthChop(); }
+    void setSensorlessHoming(bool enabled);
+
+  private:
+    uint16_t _homing_mA = 0, _normal_mA = 0;
+    bool _is_sensorless_homing = false;
+  };
+#endif
+
 constexpr uint32_t _tmc_thrs(const uint16_t msteps, const int32_t thrs, const uint32_t spmm) {
   return 12650000UL * msteps / (256 * thrs * spmm);
 }
@@ -90,17 +112,6 @@ void monitor_tmc_driver();
 #if ENABLED(TMC_DEBUG)
   void tmc_set_report_status(const bool status);
   void tmc_report_all();
-#endif
-
-/**
- * TMC2130 specific sensorless homing using stallGuard2.
- * stallGuard2 only works when in spreadCycle mode.
- * spreadCycle and stealthChop are mutually exclusive.
- *
- * Defined here because of limitations with templates and headers.
- */
-#if ENABLED(SENSORLESS_HOMING)
-  void tmc_sensorless_homing(TMC2130Stepper &st, bool enable=true);
 #endif
 
 #if ENABLED(HAVE_TMC2130)

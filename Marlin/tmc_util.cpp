@@ -36,6 +36,30 @@
 
 bool report_tmc_status = false;
 
+#if ENABLED(SENSORLESS_HOMING)
+  void SensorlessTMC2130Stepper::setSensorlessHoming(bool enable) {
+    if (_is_sensorless_homing != enable) {
+      _is_sensorless_homing = enable;
+      #if ENABLED(STEALTHCHOP)
+        stealthChop(!enable);
+      #endif
+      if (enable) _normal_mA = getCurrent();
+      setCurrent(enable ? _homing_mA : _normal_mA, R_SENSE, HOLD_MULTIPLIER);
+      diag1_stall(enable ? 1 : 0);
+    }
+  }
+
+  void SensorlessTMC2130Stepper::begin() {
+    TMC2130Stepper::begin();
+    stealthChop(false);
+  }
+
+  void SensorlessTMC2130Stepper::stealthChop(bool enable) {
+    TMC2130Stepper::stealthChop(enable);
+    coolstep_min_speed(enable ? 0 : 1024UL * 1024UL - 1UL);
+  }
+#endif
+
 /**
  * Check for over temperature or short to ground error flags.
  * Report and log warning of overtemperature condition.
@@ -573,18 +597,6 @@ void _tmc_say_sgt(const TMC_AxisEnum axis, const int8_t sgt) {
   }
 
 #endif // TMC_DEBUG
-
-#if ENABLED(SENSORLESS_HOMING)
-
-  void tmc_sensorless_homing(TMC2130Stepper &st, bool enable/*=true*/) {
-    #if ENABLED(STEALTHCHOP)
-      st.coolstep_min_speed(enable ? 1024UL * 1024UL - 1UL : 0);
-      st.stealthChop(!enable);
-    #endif
-    st.diag1_stall(enable ? 1 : 0);
-  }
-
-#endif // SENSORLESS_HOMING
 
 #if ENABLED(HAVE_TMC2130)
   #define SET_CS_PIN(st) OUT_WRITE(st##_CS_PIN, HIGH)

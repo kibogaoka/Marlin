@@ -55,6 +55,7 @@
 
 #if ENABLED(HAVE_TMC2130)
   #include <TMC2130Stepper.h>
+  #include "tmc_util.h"
   void tmc2130_init();
 #endif
 
@@ -88,7 +89,11 @@
     #define X_ENABLE_READ stepperX.isEnabled()
   #else
     #if ENABLED(HAVE_TMC2130) && ENABLED(X_IS_TMC2130)
-      extern TMC2130Stepper stepperX;
+      #if X_SENSORLESS
+        extern SensorlessTMC2130Stepper stepperX;
+      #else
+        extern TMC2130Stepper stepperX;
+      #endif
     #elif ENABLED(HAVE_TMC2208) && ENABLED(X_IS_TMC2208)
       extern TMC2208Stepper stepperX;
     #endif
@@ -121,7 +126,11 @@
     #define Y_ENABLE_READ stepperY.isEnabled()
   #else
     #if ENABLED(HAVE_TMC2130) && ENABLED(Y_IS_TMC2130)
-      extern TMC2130Stepper stepperY;
+      #if Y_SENSORLESS
+        extern SensorlessTMC2130Stepper stepperY;
+      #else
+        extern TMC2130Stepper stepperY;
+      #endif
     #elif ENABLED(HAVE_TMC2208) && ENABLED(Y_IS_TMC2208)
       extern TMC2208Stepper stepperY;
     #endif
@@ -154,7 +163,11 @@
     #define Z_ENABLE_READ stepperZ.isEnabled()
   #else
     #if ENABLED(HAVE_TMC2130) && ENABLED(Z_IS_TMC2130)
-      extern TMC2130Stepper stepperZ;
+      #if Z_SENSORLESS
+        extern SensorlessTMC2130Stepper stepperZ;
+      #else
+        extern TMC2130Stepper stepperZ;
+      #endif
     #elif ENABLED(HAVE_TMC2208) && ENABLED(Z_IS_TMC2208)
       extern TMC2208Stepper stepperZ;
     #endif
@@ -188,7 +201,11 @@
       #define X2_ENABLE_READ stepperX2.isEnabled()
     #else
       #if ENABLED(HAVE_TMC2130) && ENABLED(X2_IS_TMC2130)
-        extern TMC2130Stepper stepperX2;
+        #if X_SENSORLESS
+          extern SensorlessTMC2130Stepper stepperX2;
+        #else
+          extern TMC2130Stepper stepperX2;
+        #endif
       #elif ENABLED(HAVE_TMC2208) && ENABLED(X2_IS_TMC2208)
         extern TMC2208Stepper stepperX2;
       #endif
@@ -223,7 +240,11 @@
       #define Y2_ENABLE_READ stepperY2.isEnabled()
     #else
       #if ENABLED(HAVE_TMC2130) && ENABLED(Y2_IS_TMC2130)
-        extern TMC2130Stepper stepperY2;
+        #if Y_SENSORLESS
+          extern SensorlessTMC2130Stepper stepperY2;
+        #else
+          extern TMC2130Stepper stepperY2;
+        #endif
       #elif ENABLED(HAVE_TMC2208) && ENABLED(Y2_IS_TMC2208)
         extern TMC2208Stepper stepperY2;
       #endif
@@ -258,7 +279,11 @@
       #define Z2_ENABLE_READ stepperZ2.isEnabled()
     #else
       #if ENABLED(HAVE_TMC2130) && ENABLED(Z2_IS_TMC2130)
-        extern TMC2130Stepper stepperZ2;
+        #if Z_SENSORLESS
+          extern SensorlessTMC2130Stepper stepperZ2;
+        #else
+          extern TMC2130Stepper stepperZ2;
+        #endif
       #elif ENABLED(HAVE_TMC2208) && ENABLED(Z2_IS_TMC2208)
         extern TMC2208Stepper stepperZ2;
       #endif

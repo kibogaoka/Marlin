@@ -133,29 +133,55 @@
 
   #if ENABLED(TMC_USE_SW_SPI)
     #define _TMC2130_DEFINE(ST) TMC2130Stepper stepper##ST(ST##_ENABLE_PIN, ST##_DIR_PIN, ST##_STEP_PIN, ST##_CS_PIN, TMC_SW_MOSI, TMC_SW_MISO, TMC_SW_SCK)
+    #define _TMC2130_DEFINE_SENSORLESS(ST) SensorlessTMC2130Stepper stepper##ST(ST##_ENABLE_PIN, ST##_DIR_PIN, ST##_STEP_PIN, ST##_CS_PIN, TMC_SW_MOSI, TMC_SW_MISO, TMC_SW_SCK)
   #else
     #define _TMC2130_DEFINE(ST) TMC2130Stepper stepper##ST(ST##_ENABLE_PIN, ST##_DIR_PIN, ST##_STEP_PIN, ST##_CS_PIN)
+    #define _TMC2130_DEFINE_SENSORLESS(ST) SensorlessTMC2130Stepper stepper##ST(ST##_ENABLE_PIN, ST##_DIR_PIN, ST##_STEP_PIN, ST##_CS_PIN)
   #endif
 
 
   // Stepper objects of TMC2130 steppers used
   #if ENABLED(X_IS_TMC2130)
+    #if X_SENSORLESS
+      _TMC2130_DEFINE_SENSORLESS(X);
+    #else
     _TMC2130_DEFINE(X);
   #endif
+  #endif
   #if ENABLED(X2_IS_TMC2130)
+    #if X_SENSORLESS
+      _TMC2130_DEFINE_SENSORLESS(X2);
+    #else
     _TMC2130_DEFINE(X2);
   #endif
+  #endif
   #if ENABLED(Y_IS_TMC2130)
+    #if Y_SENSORLESS
+      _TMC2130_DEFINE_SENSORLESS(Y);
+    #else
     _TMC2130_DEFINE(Y);
   #endif
+  #endif
   #if ENABLED(Y2_IS_TMC2130)
+    #if Y_SENSORLESS
+      _TMC2130_DEFINE_SENSORLESS(Y2);
+    #else
     _TMC2130_DEFINE(Y2);
   #endif
+  #endif
   #if ENABLED(Z_IS_TMC2130)
+    #if Z_SENSORLESS
+      _TMC2130_DEFINE_SENSORLESS(Z);
+    #else
     _TMC2130_DEFINE(Z);
   #endif
+  #endif
   #if ENABLED(Z2_IS_TMC2130)
+    #if Z_SENSORLESS
+      _TMC2130_DEFINE_SENSORLESS(Z2);
+    #else
     _TMC2130_DEFINE(Z2);
+  #endif
   #endif
   #if ENABLED(E0_IS_TMC2130)
     _TMC2130_DEFINE(E0);
@@ -199,8 +225,6 @@
         UNUSED(thrs);
         UNUSED(spmm);
       #endif
-    #elif ENABLED(SENSORLESS_HOMING)
-      st.coolstep_min_speed(1024UL * 1024UL - 1UL);
     #endif
     st.GSTAT(); // Clear GSTAT
   }
