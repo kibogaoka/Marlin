@@ -612,6 +612,11 @@
    */
   //#define SD_REPRINT_LAST_SELECTED_FILE
 
+  /**
+   * Auto-report SdCard status with M27 S<seconds>
+   */
+  //#define AUTO_REPORT_SD_STATUS
+
 #endif // SDSUPPORT
 
 /**
@@ -660,6 +665,9 @@
      * Since LIGHTWEIGHT_UI has limited space, the position and status
      * message occupy the same line. Set STATUS_EXPIRE_SECONDS to the
      * length of time to display the status message before clearing.
+     *
+     * Set STATUS_EXPIRE_SECONDS to zero to never clear the status.
+     * This will prevent position updates from being displayed.
      */
     //#define LIGHTWEIGHT_UI
     #if ENABLED(LIGHTWEIGHT_UI)
@@ -771,7 +779,8 @@
 
 // The minimum pulse width (in µs) for stepping a stepper.
 // Set this if you find stepping unreliable, or if using a very fast CPU.
-#define MINIMUM_STEPPER_PULSE 0 // (µs) The smallest stepper pulse allowed
+// 0 is OK for AVR, 0 is OK for A4989 drivers, 2 is needed for DRV8825 drivers
+#define MINIMUM_STEPPER_PULSE 2
 
 // @section temperature
 
@@ -856,7 +865,8 @@
  * With auto-retract enabled, all G1 E moves within the set range
  * will be converted to firmware-based retract/recover moves.
  *
- * Be sure to turn off auto-retract during filament change.
+ * Note: Be sure to turn off auto-retract during filament change.
+ * Note: Current Zlift reset by G28 or G28 Z.
  *
  * Note that M207 / M208 / M209 settings are saved to EEPROM.
  *
@@ -937,21 +947,19 @@
  * You will need to import the TMC26XStepper library into the Arduino IDE for this
  * (https://github.com/trinamic/TMC26XStepper.git)
  */
-//#define HAVE_TMCDRIVER
-
-#if ENABLED(HAVE_TMCDRIVER)
-
-  //#define X_IS_TMC
-  //#define X2_IS_TMC
-  //#define Y_IS_TMC
-  //#define Y2_IS_TMC
-  //#define Z_IS_TMC
-  //#define Z2_IS_TMC
-  //#define E0_IS_TMC
-  //#define E1_IS_TMC
-  //#define E2_IS_TMC
-  //#define E3_IS_TMC
-  //#define E4_IS_TMC
+//#define HAVE_TMC26X
+#if ENABLED(HAVE_TMC26X)  // Choose your axes here. This is mandatory!
+  //#define X_IS_TMC26X
+  //#define X2_IS_TMC26X
+  //#define Y_IS_TMC26X
+  //#define Y2_IS_TMC26X
+  //#define Z_IS_TMC26X
+  //#define Z2_IS_TMC26X
+  //#define E0_IS_TMC26X
+  //#define E1_IS_TMC26X
+  //#define E2_IS_TMC26X
+  //#define E3_IS_TMC26X
+  //#define E4_IS_TMC26X
 
   #define X_MAX_CURRENT     1000 // in mA
   #define X_SENSE_RESISTOR    91 // in mOhms
@@ -999,7 +1007,7 @@
 
 #endif
 
-// @section TMC2130, TMC2208
+// @section tmc_smart
 
 /**
  * Enable this for SilentStepStick Trinamic TMC2130 SPI-configurable stepper drivers.
@@ -1013,6 +1021,19 @@
  * You may also use software SPI if you wish to use general purpose IO pins.
  */
 //#define HAVE_TMC2130
+#if ENABLED(HAVE_TMC2130)  // Choose your axes here. This is mandatory!
+  //#define X_IS_TMC2130
+  //#define X2_IS_TMC2130
+  //#define Y_IS_TMC2130
+  //#define Y2_IS_TMC2130
+  //#define Z_IS_TMC2130
+  //#define Z2_IS_TMC2130
+  //#define E0_IS_TMC2130
+  //#define E1_IS_TMC2130
+  //#define E2_IS_TMC2130
+  //#define E3_IS_TMC2130
+  //#define E4_IS_TMC2130
+#endif
 
 /**
  * Enable this for SilentStepStick Trinamic TMC2208 UART-configurable stepper drivers.
@@ -1025,22 +1046,7 @@
  * (https://github.com/teemuatlut/TMC2208Stepper).
  */
 //#define HAVE_TMC2208
-
-#if ENABLED(HAVE_TMC2130) || ENABLED(HAVE_TMC2208)
-
-  // CHOOSE YOUR MOTORS HERE, THIS IS MANDATORY
-  //#define X_IS_TMC2130
-  //#define X2_IS_TMC2130
-  //#define Y_IS_TMC2130
-  //#define Y2_IS_TMC2130
-  //#define Z_IS_TMC2130
-  //#define Z2_IS_TMC2130
-  //#define E0_IS_TMC2130
-  //#define E1_IS_TMC2130
-  //#define E2_IS_TMC2130
-  //#define E3_IS_TMC2130
-  //#define E4_IS_TMC2130
-
+#if ENABLED(HAVE_TMC2208)  // Choose your axes here. This is mandatory!
   //#define X_IS_TMC2208
   //#define X2_IS_TMC2208
   //#define Y_IS_TMC2208
@@ -1052,10 +1058,9 @@
   //#define E2_IS_TMC2208
   //#define E3_IS_TMC2208
   //#define E4_IS_TMC2208
+#endif
 
-  /**
-   * Stepper driver settings
-   */
+#if ENABLED(HAVE_TMC2130) || ENABLED(HAVE_TMC2208)
 
   #define R_SENSE           0.11  // R_sense resistor for SilentStepStick2130
   #define HOLD_MULTIPLIER    0.5  // Scales down the holding current from run current
@@ -1158,14 +1163,8 @@
    * Higher values make the system LESS sensitive.
    * Lower value make the system MORE sensitive.
    * Too low values can lead to false positives, while too high values will collide the axis without triggering.
-   * M914 X/Y/Z to live tune the setting
-   *
-   * X/Y/Z_HOMING_CURRENT is used to set the stepper current during sensorless homing.
-   * Lower values make the axis collide with less force, which can reduce wear on the components.
-   * Too low values may make the motor too weak to accelerate the axis at all.
-   * M916 X/Y/Z to live tune the setting.
-   *
    * It is advised to set X/Y/Z_HOME_BUMP_MM to 0.
+   * M914 X/Y/Z to live tune the setting
    */
   //#define SENSORLESS_HOMING // TMC2130 only
 
@@ -1173,12 +1172,6 @@
     #define X_HOMING_SENSITIVITY  8
     #define Y_HOMING_SENSITIVITY  8
     #define Z_HOMING_SENSITIVITY  8
-    #define X_HOMING_CURRENT      400
-    #define Y_HOMING_CURRENT      400
-    #define Z_HOMING_CURRENT      400
-    #define X2_HOMING_CURRENT     400
-    #define Y2_HOMING_CURRENT     400
-    #define Z2_HOMING_CURRENT     400
   #endif
 
   /**

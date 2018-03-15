@@ -38,44 +38,43 @@
 //
 // TMC26X Driver objects and inits
 //
-#if ENABLED(HAVE_TMCDRIVER)
-
+#if ENABLED(HAVE_TMC26X)
   #include <SPI.h>
   #include <TMC26XStepper.h>
 
   #define _TMC_DEFINE(ST) TMC26XStepper stepper##ST(200, ST##_ENABLE_PIN, ST##_STEP_PIN, ST##_DIR_PIN, ST##_MAX_CURRENT, ST##_SENSE_RESISTOR)
 
-  #if ENABLED(X_IS_TMC)
+  #if ENABLED(X_IS_TMC26X)
     _TMC_DEFINE(X);
   #endif
-  #if ENABLED(X2_IS_TMC)
+  #if ENABLED(X2_IS_TMC26X)
     _TMC_DEFINE(X2);
   #endif
-  #if ENABLED(Y_IS_TMC)
+  #if ENABLED(Y_IS_TMC26X)
     _TMC_DEFINE(Y);
   #endif
-  #if ENABLED(Y2_IS_TMC)
+  #if ENABLED(Y2_IS_TMC26X)
     _TMC_DEFINE(Y2);
   #endif
-  #if ENABLED(Z_IS_TMC)
+  #if ENABLED(Z_IS_TMC26X)
     _TMC_DEFINE(Z);
   #endif
-  #if ENABLED(Z2_IS_TMC)
+  #if ENABLED(Z2_IS_TMC26X)
     _TMC_DEFINE(Z2);
   #endif
-  #if ENABLED(E0_IS_TMC)
+  #if ENABLED(E0_IS_TMC26X)
     _TMC_DEFINE(E0);
   #endif
-  #if ENABLED(E1_IS_TMC)
+  #if ENABLED(E1_IS_TMC26X)
     _TMC_DEFINE(E1);
   #endif
-  #if ENABLED(E2_IS_TMC)
+  #if ENABLED(E2_IS_TMC26X)
     _TMC_DEFINE(E2);
   #endif
-  #if ENABLED(E3_IS_TMC)
+  #if ENABLED(E3_IS_TMC26X)
     _TMC_DEFINE(E3);
   #endif
-  #if ENABLED(E4_IS_TMC)
+  #if ENABLED(E4_IS_TMC26X)
     _TMC_DEFINE(E4);
   #endif
 
@@ -85,42 +84,42 @@
   }while(0)
 
   void tmc_init() {
-    #if ENABLED(X_IS_TMC)
+    #if ENABLED(X_IS_TMC26X)
       _TMC_INIT(X);
     #endif
-    #if ENABLED(X2_IS_TMC)
+    #if ENABLED(X2_IS_TMC26X)
       _TMC_INIT(X2);
     #endif
-    #if ENABLED(Y_IS_TMC)
+    #if ENABLED(Y_IS_TMC26X)
       _TMC_INIT(Y);
     #endif
-    #if ENABLED(Y2_IS_TMC)
+    #if ENABLED(Y2_IS_TMC26X)
       _TMC_INIT(Y2);
     #endif
-    #if ENABLED(Z_IS_TMC)
+    #if ENABLED(Z_IS_TMC26X)
       _TMC_INIT(Z);
     #endif
-    #if ENABLED(Z2_IS_TMC)
+    #if ENABLED(Z2_IS_TMC26X)
       _TMC_INIT(Z2);
     #endif
-    #if ENABLED(E0_IS_TMC)
+    #if ENABLED(E0_IS_TMC26X)
       _TMC_INIT(E0);
     #endif
-    #if ENABLED(E1_IS_TMC)
+    #if ENABLED(E1_IS_TMC26X)
       _TMC_INIT(E1);
     #endif
-    #if ENABLED(E2_IS_TMC)
+    #if ENABLED(E2_IS_TMC26X)
       _TMC_INIT(E2);
     #endif
-    #if ENABLED(E3_IS_TMC)
+    #if ENABLED(E3_IS_TMC26X)
       _TMC_INIT(E3);
     #endif
-    #if ENABLED(E4_IS_TMC)
+    #if ENABLED(E4_IS_TMC26X)
       _TMC_INIT(E4);
     #endif
   }
 
-#endif // HAVE_TMCDRIVER
+#endif // HAVE_TMC26X
 
 //
 // TMC2130 Driver objects and inits
@@ -174,34 +173,6 @@
     _TMC2130_DEFINE(E4);
   #endif
 
-  // TMC2130 Sensorless homing currents 
-  #if ENABLED(SENSORLESS_HOMING)
-    #ifdef X_HOMING_SENSITIVITY
-      #if ENABLED(X_IS_TMC2130)
-        uint16_t stepperX_homing_current;
-      #endif
-      #if ENABLED(X2_IS_TMC2130)
-        uint16_t stepperX2_homing_current;
-      #endif
-    #endif
-    #ifdef Y_HOMING_SENSITIVITY
-      #if ENABLED(Y_IS_TMC2130)
-        uint16_t stepperY_homing_current;
-      #endif
-      #if ENABLED(Y2_IS_TMC2130)
-        uint16_t stepperY2_homing_current;
-      #endif
-    #endif
-    #ifdef Z_HOMING_SENSITIVITY
-      #if ENABLED(Z_IS_TMC2130)
-        uint16_t stepperZ_homing_current;
-      #endif
-      #if ENABLED(Z2_IS_TMC2130)
-        uint16_t stepperZ2_homing_current;
-      #endif
-    #endif
-  #endif // SENSORLESS_HOMING
-  
   // Use internal reference voltage for current calculations. This is the default.
   // Following values from Trinamic's spreadsheet with values for a NEMA17 (42BYGHW609)
   // https://www.trinamic.com/products/integrated-circuits/details/tmc2130/
