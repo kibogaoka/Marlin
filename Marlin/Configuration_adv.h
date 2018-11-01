@@ -51,7 +51,7 @@
 #endif
 
 #if DISABLED(PIDTEMPBED)
-  #define BED_CHECK_INTERVAL 5000 // ms between checks in bang-bang control
+  #define BED_CHECK_INTERVAL 2000 // ms between checks in bang-bang control
   #if ENABLED(BED_LIMIT_SWITCHING)
     #define BED_HYSTERESIS 2 // Only disable heating if T>target+BED_HYSTERESIS and enable heating if T>target-BED_HYSTERESIS
   #endif
@@ -236,7 +236,7 @@
  * Multiple extruders can be assigned to the same pin in which case
  * the fan will turn on when any selected extruder is above the threshold.
  */
-#define E0_AUTO_FAN_PIN -1
+#define E0_AUTO_FAN_PIN MOSFET_D_PIN
 #define E1_AUTO_FAN_PIN -1
 #define E2_AUTO_FAN_PIN -1
 #define E3_AUTO_FAN_PIN -1
@@ -396,9 +396,9 @@
 // @section homing
 
 // Homing hits each endstop, retracts by these distances, then does a slower bump.
-#define X_HOME_BUMP_MM 5
-#define Y_HOME_BUMP_MM 5
-#define Z_HOME_BUMP_MM 2
+#define X_HOME_BUMP_MM 0
+#define Y_HOME_BUMP_MM 0
+#define Z_HOME_BUMP_MM 6
 #define HOMING_BUMP_DIVISOR { 2, 2, 4 }  // Re-Bump Speed Divisor (Divides the Homing Feedrate)
 //#define QUICK_HOME                     // If homing includes X and Y, do a diagonal move initially
 
@@ -496,7 +496,7 @@
  * vibration and surface artifacts. The algorithm adapts to provide the best possible step smoothing at the
  * lowest stepping frequencies.
  */
-//#define ADAPTIVE_STEP_SMOOTHING
+#define ADAPTIVE_STEP_SMOOTHING
 
 /**
  * Custom Microstepping
@@ -572,10 +572,10 @@
 // @section lcd
 
 // Include a page of printer information in the LCD Main Menu
-//#define LCD_INFO_MENU
+#define LCD_INFO_MENU
 
 // Scroll a longer status message into view
-//#define STATUS_MESSAGE_SCROLLING
+#define STATUS_MESSAGE_SCROLLING
 
 // On the Info Screen, display XY with one decimal place when possible
 //#define LCD_DECIMAL_SMALL_XY
@@ -689,7 +689,7 @@
   //#define LONG_FILENAME_HOST_SUPPORT
 
   // Enable this option to scroll long filenames in the SD card menu
-  //#define SCROLL_LONG_FILENAMES
+  #define SCROLL_LONG_FILENAMES
 
   /**
    * This option allows you to abort SD printing when any endstop is triggered.
@@ -871,9 +871,9 @@
  * See http://marlinfw.org/docs/features/lin_advance.html for full instructions.
  * Mention @Sebastianv650 on GitHub to alert the author of any issues.
  */
-//#define LIN_ADVANCE
+#define LIN_ADVANCE
 #if ENABLED(LIN_ADVANCE)
-  #define LIN_ADVANCE_K 0.22  // Unit: mm compression per 1mm/s extruder speed
+  #define LIN_ADVANCE_K 0.1  // Unit: mm compression per 1mm/s extruder speed
   //#define LA_DEBUG          // If enabled, this will generate debug information output over USB.
 #endif
 
@@ -1105,7 +1105,7 @@
  * Requires NOZZLE_PARK_FEATURE.
  * This feature is required for the default FILAMENT_RUNOUT_SCRIPT.
  */
-//#define ADVANCED_PAUSE_FEATURE
+#define ADVANCED_PAUSE_FEATURE
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
   #define PAUSE_PARK_RETRACT_FEEDRATE         60  // (mm/s) Initial retract feedrate.
   #define PAUSE_PARK_RETRACT_LENGTH            2  // (mm) Initial retract.
@@ -1234,47 +1234,20 @@
 #if HAS_TRINAMIC
 
   #define R_SENSE           0.11  // R_sense resistor for SilentStepStick2130
-  #define HOLD_MULTIPLIER    0.5  // Scales down the holding current from run current
+  #define HOLD_MULTIPLIER    0.6  // Scales down the holding current from run current
   #define INTERPOLATE       true  // Interpolate X/Y/Z_MICROSTEPS to 256
 
-  #define X_CURRENT          800  // rms current in mA. Multiply by 1.41 for peak current.
+  #define X_CURRENT          700  // rms current in mA. Multiply by 1.41 for peak current.
   #define X_MICROSTEPS        16  // 0..256
 
-  #define Y_CURRENT          800
+  #define Y_CURRENT          700
   #define Y_MICROSTEPS        16
 
-  #define Z_CURRENT          800
-  #define Z_MICROSTEPS        16
+  #define Z_CURRENT          700
+  #define Z_MICROSTEPS        32
 
-  #define X2_CURRENT         800
-  #define X2_MICROSTEPS       16
-
-  #define Y2_CURRENT         800
-  #define Y2_MICROSTEPS       16
-
-  #define Z2_CURRENT         800
-  #define Z2_MICROSTEPS       16
-
-  #define Z3_CURRENT         800
-  #define Z3_MICROSTEPS       16
-
-  #define E0_CURRENT         800
-  #define E0_MICROSTEPS       16
-
-  #define E1_CURRENT         800
-  #define E1_MICROSTEPS       16
-
-  #define E2_CURRENT         800
-  #define E2_MICROSTEPS       16
-
-  #define E3_CURRENT         800
-  #define E3_MICROSTEPS       16
-
-  #define E4_CURRENT         800
-  #define E4_MICROSTEPS       16
-
-  #define E5_CURRENT         800
-  #define E5_MICROSTEPS       16
+  #define E0_CURRENT         700
+  #define E0_MICROSTEPS       32
 
   /**
    * Use software SPI for TMC2130.
@@ -1290,7 +1263,7 @@
    * Use Trinamic's ultra quiet stepping mode.
    * When disabled, Marlin will use spreadCycle stepping mode.
    */
-  #define STEALTHCHOP
+  //#define STEALTHCHOP
 
   /**
    * Monitor Trinamic TMC2130 and TMC2208 drivers for error conditions,
@@ -1303,12 +1276,12 @@
    * M912 - Clear stepper driver overtemperature pre-warn condition flag.
    * M122 S0/1 - Report driver parameters (Requires TMC_DEBUG)
    */
-  //#define MONITOR_DRIVER_STATUS
+  #define MONITOR_DRIVER_STATUS
 
   #if ENABLED(MONITOR_DRIVER_STATUS)
     #define CURRENT_STEP_DOWN     50  // [mA]
     #define REPORT_CURRENT_CHANGE
-    #define STOP_ON_ERROR
+    //#define STOP_ON_ERROR
   #endif
 
   /**
@@ -1345,7 +1318,7 @@
    * It is advised to set X/Y/Z_HOME_BUMP_MM to 0.
    * M914 X/Y/Z to live tune the setting
    */
-  //#define SENSORLESS_HOMING // TMC2130 only
+  #define SENSORLESS_HOMING // TMC2130 only
 
   /**
    * Use StallGuard2 to probe the bed with the nozzle.
@@ -1356,16 +1329,17 @@
   //#define SENSORLESS_PROBING // TMC2130 only
 
   #if ENABLED(SENSORLESS_HOMING) || ENABLED(SENSORLESS_PROBING)
-    #define X_STALL_SENSITIVITY  8
-    #define Y_STALL_SENSITIVITY  8
-    //#define Z_STALL_SENSITIVITY  8
+    #define X_STALL_SENSITIVITY  3
+    #define Y_STALL_SENSITIVITY  3
+    #define X_HOMING_CURRENT     300
+    #define Y_HOMING_CURRENT     300
   #endif
 
   /**
    * Enable M122 debugging command for TMC stepper drivers.
    * M122 S0/1 will enable continous reporting.
    */
-  //#define TMC_DEBUG
+  #define TMC_DEBUG
 
   /**
    * M915 Z Axis Calibration
