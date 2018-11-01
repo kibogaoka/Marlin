@@ -23,10 +23,11 @@
 #include "../gcode.h"
 #include "../../module/temperature.h"
 #include "../../module/stepper.h"
+#include "../../module/printcounter.h" // for print_job_timer
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(ULTIPANEL)
+#if HAS_LCD_MENU
   #include "../../lcd/ultralcd.h"
 #endif
 
@@ -41,13 +42,13 @@
   #endif
 
   // Could be moved to a feature, but this is all the data
-  bool powersupply_on =
+  bool powersupply_on = (
     #if ENABLED(PS_DEFAULT_OFF)
       false
     #else
       true
     #endif
-  ;
+  );
 
   #if HAS_TRINAMIC
     #include "../../feature/tmc_util.h"
@@ -76,20 +77,13 @@
       OUT_WRITE(SUICIDE_PIN, HIGH);
     #endif
 
-    #if ENABLED(HAVE_TMC2130)
-      delay(100);
-      tmc2130_init(); // Settings only stick when the driver has power
+    #if DISABLED(AUTO_POWER_CONTROL)
+      delay(100); // Wait for power to settle
+      restore_stepper_drivers();
     #endif
 
-    #if ENABLED(HAVE_TMC2208)
-      delay(100);
-      tmc2208_init();
-    #endif
-
-    powersupply_on = true;
-
-    #if ENABLED(ULTIPANEL)
-      LCD_MESSAGEPGM(WELCOME_MSG);
+    #if HAS_LCD_MENU
+      lcd_reset_status();
     #endif
   }
 
@@ -102,27 +96,26 @@
  */
 void GcodeSuite::M81() {
   thermalManager.disable_all_heaters();
-  stepper.finish_and_disable();
+  print_job_timer.stop();
+  planner.finish_and_disable();
 
   #if FAN_COUNT > 0
-    for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
+    zero_fan_speeds();
     #if ENABLED(PROBING_FANS_OFF)
       fans_paused = false;
-      ZERO(paused_fanSpeeds);
+      ZERO(paused_fan_speed);
     #endif
   #endif
 
   safe_delay(1000); // Wait 1 second before switching off
 
   #if HAS_SUICIDE
-    stepper.synchronize();
     suicide();
   #elif HAS_POWER_SWITCH
     PSU_OFF();
-    powersupply_on = false;
   #endif
 
-  #if ENABLED(ULTIPANEL)
+  #if HAS_LCD_MENU
     LCD_MESSAGEPGM(MACHINE_NAME " " MSG_OFF ".");
   #endif
 }

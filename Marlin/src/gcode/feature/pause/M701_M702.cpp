@@ -34,16 +34,16 @@
   #include "../../../module/tool_change.h"
 #endif
 
-#if ENABLED(ULTIPANEL)
+#if HAS_LCD_MENU
   #include "../../../lcd/ultralcd.h"
 #endif
 
 /**
  * M701: Load filament
  *
- *  T[extruder] - Optional extruder number. Current extruder if omitted.
- *  Z[distance] - Move the Z axis by this distance
- *  L[distance] - Extrude distance for insertion (positive value) (manual reload)
+ *  T<extruder> - Optional extruder number. Current extruder if omitted.
+ *  Z<distance> - Move the Z axis by this distance
+ *  L<distance> - Extrude distance for insertion (positive value) (manual reload)
  *
  *  Default values are used for omitted arguments.
  */
@@ -60,12 +60,8 @@ void GcodeSuite::M701() {
   // Z axis lift
   if (parser.seenval('Z')) park_point.z = parser.linearval('Z');
 
-  // Load filament
-  const float load_length = FABS(parser.seen('L') ? parser.value_axis_units(E_AXIS) :
-                                                    filament_change_load_length[target_extruder]);
-
   // Show initial "wait for load" message
-  #if ENABLED(ULTIPANEL)
+  #if HAS_LCD_MENU
     lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_LOAD, ADVANCED_PAUSE_MODE_LOAD_FILAMENT, target_extruder);
   #endif
 
@@ -78,14 +74,22 @@ void GcodeSuite::M701() {
 
   // Lift Z axis
   if (park_point.z > 0)
-    do_blocking_move_to_z(min(current_position[Z_AXIS] + park_point.z, Z_MAX_POS), NOZZLE_PARK_Z_FEEDRATE);
+    do_blocking_move_to_z(MIN(current_position[Z_AXIS] + park_point.z, Z_MAX_POS), NOZZLE_PARK_Z_FEEDRATE);
 
-  load_filament(load_length, ADVANCED_PAUSE_EXTRUDE_LENGTH, FILAMENT_CHANGE_ALERT_BEEPS, true,
-                thermalManager.wait_for_heating(target_extruder), ADVANCED_PAUSE_MODE_LOAD_FILAMENT);
+  // Load filament
+  constexpr float slow_load_length = FILAMENT_CHANGE_SLOW_LOAD_LENGTH;
+  const float fast_load_length = ABS(parser.seen('L') ? parser.value_axis_units(E_AXIS)
+                                                       : fc_settings[active_extruder].load_length);
+  load_filament(slow_load_length, fast_load_length, ADVANCED_PAUSE_PURGE_LENGTH, FILAMENT_CHANGE_ALERT_BEEPS,
+                true, thermalManager.still_heating(target_extruder), ADVANCED_PAUSE_MODE_LOAD_FILAMENT
+                #if ENABLED(DUAL_X_CARRIAGE)
+                  , target_extruder
+                #endif
+              );
 
   // Restore Z axis
   if (park_point.z > 0)
-    do_blocking_move_to_z(max(current_position[Z_AXIS] - park_point.z, Z_MIN_POS), NOZZLE_PARK_Z_FEEDRATE);
+    do_blocking_move_to_z(MAX(current_position[Z_AXIS] - park_point.z, 0), NOZZLE_PARK_Z_FEEDRATE);
 
   #if EXTRUDERS > 1
     // Restore toolhead if it was changed
@@ -94,7 +98,7 @@ void GcodeSuite::M701() {
   #endif
 
   // Show status screen
-  #if ENABLED(ULTIPANEL)
+  #if HAS_LCD_MENU
     lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
   #endif
 }
@@ -102,10 +106,10 @@ void GcodeSuite::M701() {
 /**
  * M702: Unload filament
  *
- *  T[extruder] - Optional extruder number. If omitted, current extruder
+ *  T<extruder> - Optional extruder number. If omitted, current extruder
  *                (or ALL extruders with FILAMENT_UNLOAD_ALL_EXTRUDERS).
- *  Z[distance] - Move the Z axis by this distance
- *  U[distance] - Retract distance for removal (manual reload)
+ *  Z<distance> - Move the Z axis by this distance
+ *  U<distance> - Retract distance for removal (manual reload)
  *
  *  Default values are used for omitted arguments.
  */
@@ -123,7 +127,7 @@ void GcodeSuite::M702() {
   if (parser.seenval('Z')) park_point.z = parser.linearval('Z');
 
   // Show initial "wait for unload" message
-  #if ENABLED(ULTIPANEL)
+  #if HAS_LCD_MENU
     lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_UNLOAD, ADVANCED_PAUSE_MODE_UNLOAD_FILAMENT, target_extruder);
   #endif
 
@@ -136,29 +140,29 @@ void GcodeSuite::M702() {
 
   // Lift Z axis
   if (park_point.z > 0)
-    do_blocking_move_to_z(min(current_position[Z_AXIS] + park_point.z, Z_MAX_POS), NOZZLE_PARK_Z_FEEDRATE);
+    do_blocking_move_to_z(MIN(current_position[Z_AXIS] + park_point.z, Z_MAX_POS), NOZZLE_PARK_Z_FEEDRATE);
 
   // Unload filament
   #if EXTRUDERS > 1 && ENABLED(FILAMENT_UNLOAD_ALL_EXTRUDERS)
     if (!parser.seenval('T')) {
       HOTEND_LOOP() {
         if (e != active_extruder) tool_change(e, 0, true);
-        unload_filament(-filament_change_unload_length[e], true, ADVANCED_PAUSE_MODE_UNLOAD_FILAMENT);
+        unload_filament(-fc_settings[e].unload_length, true, ADVANCED_PAUSE_MODE_UNLOAD_FILAMENT);
       }
     }
     else
   #endif
   {
     // Unload length
-    const float unload_length = -FABS(parser.seen('U') ? parser.value_axis_units(E_AXIS) :
-                                                        filament_change_unload_length[target_extruder]);
+    const float unload_length = -ABS(parser.seen('U') ? parser.value_axis_units(E_AXIS) :
+                                                        fc_settings[target_extruder].unload_length);
 
     unload_filament(unload_length, true, ADVANCED_PAUSE_MODE_UNLOAD_FILAMENT);
   }
 
   // Restore Z axis
   if (park_point.z > 0)
-    do_blocking_move_to_z(max(current_position[Z_AXIS] - park_point.z, Z_MIN_POS), NOZZLE_PARK_Z_FEEDRATE);
+    do_blocking_move_to_z(MAX(current_position[Z_AXIS] - park_point.z, 0), NOZZLE_PARK_Z_FEEDRATE);
 
   #if EXTRUDERS > 1
     // Restore toolhead if it was changed
@@ -167,7 +171,7 @@ void GcodeSuite::M702() {
   #endif
 
   // Show status screen
-  #if ENABLED(ULTIPANEL)
+  #if HAS_LCD_MENU
     lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_STATUS);
   #endif
 }

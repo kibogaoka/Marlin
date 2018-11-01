@@ -30,7 +30,6 @@
 #ifndef LANGUAGE_UK_H
 #define LANGUAGE_UK_H
 
-#define MAPPER_D0D1                // For Cyrillic
 #define DISPLAY_CHARSET_ISO10646_5
 #define CHARSIZE 2
 
@@ -45,6 +44,7 @@
 #define MSG_AUTO_HOME_X                     _UxGT("Паркування X")
 #define MSG_AUTO_HOME_Y                     _UxGT("Паркування Y")
 #define MSG_AUTO_HOME_Z                     _UxGT("Паркування Z")
+#define MSG_TMC_Z_CALIBRATION               _UxGT("Калібрування Z")
 #define MSG_LEVEL_BED_HOMING                _UxGT("Паркування XYZ")
 #define MSG_LEVEL_BED_WAITING               _UxGT("Почати")
 #define MSG_LEVEL_BED_NEXT_POINT            _UxGT("Слідуюча Точка")
@@ -52,12 +52,12 @@
 #define MSG_SET_HOME_OFFSETS                _UxGT("Зберегти паркув.")
 #define MSG_HOME_OFFSETS_APPLIED            _UxGT("Зміщення застос.")
 #define MSG_SET_ORIGIN                      _UxGT("Встанов. початок")
-#define MSG_PREHEAT_1                       _UxGT("Нагрів PLA")
+#define MSG_PREHEAT_1                       _UxGT("Нагрів " PREHEAT_1_LABEL)
 #define MSG_PREHEAT_1_N                     MSG_PREHEAT_1 _UxGT(" ")
 #define MSG_PREHEAT_1_ALL                   MSG_PREHEAT_1 _UxGT(" Все")
 #define MSG_PREHEAT_1_BEDONLY               MSG_PREHEAT_1 _UxGT(" Стіл")
 #define MSG_PREHEAT_1_SETTINGS              MSG_PREHEAT_1 _UxGT(" нал.")
-#define MSG_PREHEAT_2                       _UxGT("Нагрів ABS")
+#define MSG_PREHEAT_2                       _UxGT("Нагрів " PREHEAT_2_LABEL)
 #define MSG_PREHEAT_2_N                     MSG_PREHEAT_2 _UxGT(" ")
 #define MSG_PREHEAT_2_ALL                   MSG_PREHEAT_2 _UxGT(" Все")
 #define MSG_PREHEAT_2_BEDONLY               MSG_PREHEAT_2 _UxGT(" Стіл")
@@ -129,6 +129,7 @@
 #define MSG_E3STEPS                         _UxGT("E3кроків/мм")
 #define MSG_E4STEPS                         _UxGT("E4кроків/мм")
 #define MSG_E5STEPS                         _UxGT("E5кроків/мм")
+#define MSG_E6STEPS                         _UxGT("E6кроків/мм")
 #define MSG_TEMPERATURE                     _UxGT("Температура")
 #define MSG_MOTION                          _UxGT("Рух")
 #define MSG_FILAMENT                        _UxGT("Волокно")
@@ -149,14 +150,13 @@
 #define MSG_NO_CARD                         _UxGT("Відсутня SD карт.")
 #define MSG_DWELL                           _UxGT("Сплячка...")
 #define MSG_USERWAIT                        _UxGT("Очікування дій...")
-#define MSG_RESUMING                        _UxGT("Відновлення друку")
 #define MSG_PRINT_ABORTED                   _UxGT("Друк скасовано")
 #define MSG_NO_MOVE                         _UxGT("Немає руху.")
 #define MSG_KILLED                          _UxGT("ПЕРЕРВАНО. ")
 #define MSG_STOPPED                         _UxGT("ЗУПИНЕНО. ")
 #define MSG_FILAMENTCHANGE                  _UxGT("Зміна волокна")
 #define MSG_INIT_SDCARD                     _UxGT("Старт SD картки")
-#define MSG_CNG_SDCARD                      _UxGT("Заміна SD карти")
+#define MSG_CHANGE_SDCARD                   _UxGT("Заміна SD карти")
 #define MSG_ZPROBE_OUT                      _UxGT("Z дет. не в межах")
 #define MSG_BLTOUCH_SELFTEST                _UxGT("BLTouch Само-Тест")
 #define MSG_BLTOUCH_RESET                   _UxGT("Скинути BLTouch")
@@ -169,16 +169,14 @@
 #define MSG_ENDSTOP_ABORT                   _UxGT("невдача кінцевика")
 #define MSG_HEATING_FAILED_LCD              _UxGT("Невдалий нагрів")
 #define MSG_THERMAL_RUNAWAY                 _UxGT("ЗБІЙ ТЕМПЕРАТУРИ")
-#define MSG_ERR_Z_HOMING                    _UxGT("G28 Z Відмовлено")
+#define MSG_ERR_Z_HOMING                    MSG_HOME _UxGT(" ") MSG_X MSG_Y _UxGT(" ") MSG_FIRST
 #define MSG_HALTED                          _UxGT("ПРИНТЕР ЗУПИНЕНО")
 #define MSG_PLEASE_RESET                    _UxGT("Перезавантажте")
 #define MSG_SHORT_DAY                       _UxGT("д") // One character only
 #define MSG_SHORT_HOUR                      _UxGT("г") // One character only
 #define MSG_SHORT_MINUTE                    _UxGT("х") // One character only
 #define MSG_HEATING                         _UxGT("Нагрівання...")
-#define MSG_HEATING_COMPLETE                _UxGT("Нагріто.")
-#define MSG_BED_HEATING                     _UxGT("Нагрівання столу.")
-#define MSG_BED_DONE                        _UxGT("Стіл нагрітий.")
+#define MSG_BED_HEATING                     _UxGT("Нагрівання столу...")
 #define MSG_DELTA_CALIBRATE                 _UxGT("Калібр. Delta")
 #define MSG_DELTA_CALIBRATE_X               _UxGT("Калібрування X")
 #define MSG_DELTA_CALIBRATE_Y               _UxGT("Калібрування Y")

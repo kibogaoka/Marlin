@@ -30,7 +30,6 @@
 #ifndef LANGUAGE_GL_H
 #define LANGUAGE_GL_H
 
-#define MAPPER_C2C3
 #define DISPLAY_CHARSET_ISO10646_1
 #define NOT_EXTENDED_ISO10646_1_5X7
 
@@ -45,6 +44,7 @@
 #define MSG_AUTO_HOME_X                     _UxGT("Ir orixe X")
 #define MSG_AUTO_HOME_Y                     _UxGT("Ir orixe Y")
 #define MSG_AUTO_HOME_Z                     _UxGT("Ir orixe Z")
+#define MSG_TMC_Z_CALIBRATION               _UxGT("Calibrar Z")
 #define MSG_LEVEL_BED_HOMING                _UxGT("Ir orixes XYZ")
 #define MSG_LEVEL_BED_WAITING               _UxGT("Prema pulsador")
 #define MSG_LEVEL_BED_NEXT_POINT            _UxGT("Seguinte punto")
@@ -52,16 +52,16 @@
 #define MSG_SET_HOME_OFFSETS                _UxGT("Offsets na orixe")
 #define MSG_HOME_OFFSETS_APPLIED            _UxGT("Offsets fixados")
 #define MSG_SET_ORIGIN                      _UxGT("Fixar orixe")
-#define MSG_PREHEAT_1                       _UxGT("Prequentar PLA")
-#define MSG_PREHEAT_1_N                     _UxGT("Prequentar PLA ")
-#define MSG_PREHEAT_1_ALL                   _UxGT("Preque. PLA Todo")
-#define MSG_PREHEAT_1_BEDONLY               _UxGT("Preque. PLA Cama")
-#define MSG_PREHEAT_1_SETTINGS              _UxGT("Preque. PLA conf")
-#define MSG_PREHEAT_2                       _UxGT("Prequentar ABS")
-#define MSG_PREHEAT_2_N                     _UxGT("Prequentar ABS ")
-#define MSG_PREHEAT_2_ALL                   _UxGT("Preque. ABS Todo")
-#define MSG_PREHEAT_2_BEDONLY               _UxGT("Preque. ABS Cama")
-#define MSG_PREHEAT_2_SETTINGS              _UxGT("Preque. ABS conf")
+#define MSG_PREHEAT_1                       _UxGT("Prequentar " PREHEAT_1_LABEL)
+#define MSG_PREHEAT_1_N                     _UxGT("Prequentar " PREHEAT_1_LABEL " ")
+#define MSG_PREHEAT_1_ALL                   _UxGT("Preque. " PREHEAT_1_LABEL " Todo")
+#define MSG_PREHEAT_1_BEDONLY               _UxGT("Preque. " PREHEAT_1_LABEL " Cama")
+#define MSG_PREHEAT_1_SETTINGS              _UxGT("Preque. " PREHEAT_1_LABEL " conf")
+#define MSG_PREHEAT_2                       _UxGT("Prequentar " PREHEAT_2_LABEL)
+#define MSG_PREHEAT_2_N                     _UxGT("Prequentar " PREHEAT_2_LABEL " ")
+#define MSG_PREHEAT_2_ALL                   _UxGT("Preque. " PREHEAT_2_LABEL " Todo")
+#define MSG_PREHEAT_2_BEDONLY               _UxGT("Preque. " PREHEAT_2_LABEL " Cama")
+#define MSG_PREHEAT_2_SETTINGS              _UxGT("Preque. " PREHEAT_2_LABEL " conf")
 #define MSG_COOLDOWN                        _UxGT("Arrefriar")
 #define MSG_SWITCH_PS_ON                    _UxGT("Acender")
 #define MSG_SWITCH_PS_OFF                   _UxGT("Apagar")
@@ -129,6 +129,7 @@
 #define MSG_E3STEPS                         _UxGT("E3 pasos/mm")
 #define MSG_E4STEPS                         _UxGT("E4 pasos/mm")
 #define MSG_E5STEPS                         _UxGT("E5 pasos/mm")
+#define MSG_E6STEPS                         _UxGT("E6 pasos/mm")
 #define MSG_TEMPERATURE                     _UxGT("Temperatura")
 #define MSG_MOTION                          _UxGT("Movemento")
 #define MSG_FILAMENT                        _UxGT("Filamento")
@@ -149,7 +150,6 @@
 #define MSG_NO_CARD                         _UxGT("Sen tarxeta SD")
 #define MSG_DWELL                           _UxGT("En repouso...")
 #define MSG_USERWAIT                        _UxGT("A espera...")
-#define MSG_RESUMING                        _UxGT("Imprimindo...")
 #define MSG_PRINT_ABORTED                   _UxGT("Impre. cancelada")
 #define MSG_NO_MOVE                         _UxGT("Sen movemento.")
 #define MSG_KILLED                          _UxGT("PROGRAMA MORTO")
@@ -157,14 +157,14 @@
 #define MSG_CONTROL_RETRACT                 _UxGT("Retraccion mm")
 #define MSG_CONTROL_RETRACT_SWAP            _UxGT("Cambio retra. mm")
 #define MSG_CONTROL_RETRACTF                _UxGT("Retraccion V")
-#define MSG_CONTROL_RETRACT_ZLIFT           _UxGT("Alzar Z mm")
+#define MSG_CONTROL_RETRACT_ZHOP            _UxGT("Alzar Z mm")
 #define MSG_CONTROL_RETRACT_RECOVER         _UxGT("Recup. retra. mm")
 #define MSG_CONTROL_RETRACT_RECOVER_SWAP    _UxGT("Cambio recup. mm")
 #define MSG_CONTROL_RETRACT_RECOVERF        _UxGT("Recuperacion V")
 #define MSG_AUTORETRACT                     _UxGT("Retraccion auto.")
 #define MSG_FILAMENTCHANGE                  _UxGT("Cambiar filamen.")
 #define MSG_INIT_SDCARD                     _UxGT("Iniciando SD")
-#define MSG_CNG_SDCARD                      _UxGT("Cambiar SD")
+#define MSG_CHANGE_SDCARD                   _UxGT("Cambiar SD")
 #define MSG_ZPROBE_OUT                      _UxGT("Sonda-Z sen cama")
 #define MSG_HOME                            _UxGT("Home")  // Used as MSG_HOME " " MSG_X MSG_Y MSG_Z " " MSG_FIRST
 #define MSG_BLTOUCH_SELFTEST                _UxGT("Comprobar BLTouch")
@@ -182,16 +182,14 @@
 #define MSG_ERR_MINTEMP                     _UxGT("Err: temp. min.")
 #define MSG_ERR_MAXTEMP_BED                 _UxGT("Err: MAXTEMP BED")
 #define MSG_ERR_MINTEMP_BED                 _UxGT("Err: MINTEMP BED")
-#define MSG_ERR_Z_HOMING                    _UxGT("G28 Z impedido")
+#define MSG_ERR_Z_HOMING                    MSG_HOME _UxGT(" ") MSG_X MSG_Y _UxGT(" ") MSG_FIRST
 #define MSG_HALTED                          _UxGT("SISTEMA MORTO")
 #define MSG_PLEASE_RESET                    _UxGT("Debe reiniciar!")
 #define MSG_SHORT_DAY                       _UxGT("d") // One character only
 #define MSG_SHORT_HOUR                      _UxGT("h") // One character only
 #define MSG_SHORT_MINUTE                    _UxGT("m") // One character only
 #define MSG_HEATING                         _UxGT("Quentando...")
-#define MSG_HEATING_COMPLETE                _UxGT("Xa esta quente")
-#define MSG_BED_HEATING                     _UxGT("Quentando cama")
-#define MSG_BED_DONE                        _UxGT("Cama esta quente")
+#define MSG_BED_HEATING                     _UxGT("Quentando cama...")
 #define MSG_DELTA_CALIBRATE                 _UxGT("Calibracion Delta")
 #define MSG_DELTA_CALIBRATE_X               _UxGT("Calibrar X")
 #define MSG_DELTA_CALIBRATE_Y               _UxGT("Calibrar Y")
@@ -255,4 +253,3 @@
 #endif // LCD_HEIGHT < 4
 
 #endif // LANGUAGE_GL_H
-

@@ -26,7 +26,7 @@
 // Includes
 // --------------------------------------------------------------------------
 
-#include "../HAL.h"
+#include "HAL.h"
 
 #include "HAL_timers_STM32F7.h"
 
@@ -69,11 +69,11 @@ tTimerConfig timerConfig[NUM_HARDWARE_TIMERS];
 // --------------------------------------------------------------------------
 
 
-bool timers_initialised[NUM_HARDWARE_TIMERS] = {false};
+bool timers_initialized[NUM_HARDWARE_TIMERS] = {false};
 
 void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
 
-  if (!timers_initialised[timer_num]) {
+  if (!timers_initialized[timer_num]) {
     switch (timer_num) {
       case STEP_TIMER_NUM:
       //STEPPER TIMER TIM5 //use a 32bit timer
@@ -85,8 +85,8 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
       timerConfig[0].IRQ_Id = TIM5_IRQn;
       timerConfig[0].callback = (uint32_t)TC5_Handler;
       HAL_NVIC_SetPriority(timerConfig[0].IRQ_Id, 1, 0);
-      pinMode(STEPPER_ENABLE_PIN,OUTPUT);
-      digitalWrite(STEPPER_ENABLE_PIN,LOW);
+      SET_OUTPUT(STEPPER_ENABLE_PIN);
+      WRITE(STEPPER_ENABLE_PIN);
       break;
     case TEMP_TIMER_NUM:
       //TEMP TIMER TIM7 // any available 16bit Timer (1 already used for PWM)
@@ -100,7 +100,7 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
       HAL_NVIC_SetPriority(timerConfig[1].IRQ_Id, 2, 0);
       break;
     }
-    timers_initialised[timer_num] = true;
+    timers_initialized[timer_num] = true;
   }
 
   timerConfig[timer_num].timerdef.Init.Period = (((HAL_TIMER_RATE) / timerConfig[timer_num].timerdef.Init.Prescaler) / frequency) - 1;
@@ -127,6 +127,11 @@ void HAL_timer_enable_interrupt(const uint8_t timer_num) {
 
 void HAL_timer_disable_interrupt(const uint8_t timer_num) {
   HAL_NVIC_DisableIRQ(timerConfig[timer_num].IRQ_Id);
+
+  // We NEED memory barriers to ensure Interrupts are actually disabled!
+  // ( https://dzone.com/articles/nvic-disabling-interrupts-on-arm-cortex-m-and-the )
+  __DSB();
+  __ISB();
 }
 
 hal_timer_t HAL_timer_get_compare(const uint8_t timer_num) {
@@ -141,6 +146,11 @@ void HAL_timer_isr_prologue(const uint8_t timer_num) {
   if (__HAL_TIM_GET_FLAG(&timerConfig[timer_num].timerdef, TIM_FLAG_UPDATE) == SET) {
     __HAL_TIM_CLEAR_FLAG(&timerConfig[timer_num].timerdef, TIM_FLAG_UPDATE);
   }
+}
+
+bool HAL_timer_interrupt_enabled(const uint8_t timer_num) {
+  const uint32_t IRQ_Id = uint32_t(timerConfig[timer_num].IRQ_Id);
+  return NVIC->ISER[IRQ_Id >> 5] & _BV32(IRQ_Id & 0x1F);
 }
 
 #endif // STM32F7

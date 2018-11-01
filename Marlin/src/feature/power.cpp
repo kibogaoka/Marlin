@@ -39,36 +39,54 @@ millis_t Power::lastPowerOn;
 
 bool Power::is_power_needed() {
   #if ENABLED(AUTO_POWER_FANS)
-    for (uint8_t i = 0; i < FAN_COUNT; i++) if (fanSpeeds[i] > 0) return true;
+    for (uint8_t i = 0; i < FAN_COUNT; i++) if (fan_speed[i]) return true;
   #endif
 
   #if ENABLED(AUTO_POWER_E_FANS)
-    HOTEND_LOOP() if (thermalManager.autofan_speed[e] > 0) return true;
+    HOTEND_LOOP() if (thermalManager.autofan_speed[e]) return true;
   #endif
 
   #if ENABLED(AUTO_POWER_CONTROLLERFAN) && HAS_CONTROLLER_FAN && ENABLED(USE_CONTROLLER_FAN)
-    if (controllerFanSpeed > 0) return true;
+    if (controllerfan_speed) return true;
   #endif
 
-  if (X_ENABLE_READ == X_ENABLE_ON || Y_ENABLE_READ == Y_ENABLE_ON || Z_ENABLE_READ == Z_ENABLE_ON ||
-      thermalManager.soft_pwm_amount_bed > 0
-      || E0_ENABLE_READ == E_ENABLE_ON // If any of the drivers are enabled...
+  // If any of the drivers or the bed are enabled...
+  if (X_ENABLE_READ == X_ENABLE_ON || Y_ENABLE_READ == Y_ENABLE_ON || Z_ENABLE_READ == Z_ENABLE_ON
+    #if HAS_HEATED_BED
+      || thermalManager.soft_pwm_amount_bed > 0
+    #endif
+      #if HAS_X2_ENABLE
+        || X2_ENABLE_READ == X_ENABLE_ON
+      #endif
+      #if HAS_Y2_ENABLE
+        || Y2_ENABLE_READ == Y_ENABLE_ON
+      #endif
+      #if HAS_Z2_ENABLE
+        || Z2_ENABLE_READ == Z_ENABLE_ON
+      #endif
+      || E0_ENABLE_READ == E_ENABLE_ON
       #if E_STEPPERS > 1
         || E1_ENABLE_READ == E_ENABLE_ON
-        #if HAS_X2_ENABLE
-          || X2_ENABLE_READ == X_ENABLE_ON
-        #endif
         #if E_STEPPERS > 2
-            || E2_ENABLE_READ == E_ENABLE_ON
+          || E2_ENABLE_READ == E_ENABLE_ON
           #if E_STEPPERS > 3
-              || E3_ENABLE_READ == E_ENABLE_ON
+            || E3_ENABLE_READ == E_ENABLE_ON
+            #if E_STEPPERS > 4
+              || E4_ENABLE_READ == E_ENABLE_ON
+              #if E_STEPPERS > 5
+                || E5_ENABLE_READ == E_ENABLE_ON
+              #endif
+            #endif
           #endif
         #endif
       #endif
   ) return true;
 
   HOTEND_LOOP() if (thermalManager.degTargetHotend(e) > 0) return true;
-  if (thermalManager.degTargetBed() > 0) return true;
+
+  #if HAS_HEATED_BED
+    if (thermalManager.degTargetBed() > 0) return true;
+  #endif
 
   return false;
 }
@@ -87,11 +105,18 @@ void Power::check() {
 
 void Power::power_on() {
   lastPowerOn = millis();
-  OUT_WRITE(PS_ON_PIN, PS_ON_AWAKE);
+  if (!powersupply_on) {
+    PSU_PIN_ON();
+
+    #if HAS_TRINAMIC
+      delay(100); // Wait for power to settle
+      restore_stepper_drivers();
+    #endif
+  }
 }
 
 void Power::power_off() {
-  OUT_WRITE(PS_ON_PIN, PS_ON_ASLEEP);
+  if (powersupply_on) PSU_PIN_OFF();
 }
 
 #endif // AUTO_POWER_CONTROL

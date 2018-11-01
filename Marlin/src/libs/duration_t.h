@@ -19,9 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
-#ifndef __DURATION_T__
-#define __DURATION_T__
+#include <Arduino.h>
 
 struct duration_t {
   /**
@@ -154,7 +154,7 @@ struct duration_t {
       return d >= 10 ? 9 : 8;
     }
     else if (h < 100) {
-      sprintf_P(buffer, PSTR("%02u:%02u"), h % 24, m);
+      sprintf_P(buffer, PSTR("%02u:%02u"), h, m);
       return 5;
     }
     else {
@@ -163,5 +163,3 @@ struct duration_t {
     }
   }
 };
-
-#endif // __DURATION_T__
