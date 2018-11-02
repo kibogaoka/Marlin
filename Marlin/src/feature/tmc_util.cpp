@@ -628,21 +628,6 @@
 
 #endif // TMC_DEBUG
 
-#if USE_SENSORLESS
-
-  void tmc_stallguard(TMC2130Stepper &st, const bool enable/*=true*/) {
-    st.TCOOLTHRS(enable ? 0xFFFFF : 0);
-    #if ENABLED(STEALTHCHOP)
-      st.en_pwm_mode(!enable);
-    #endif
-    st.diag1_stall(enable ? 1 : 0);
-  }
-  void tmc_sensorless_homing(TMC2660Stepper &st, const bool enable) {
-    // TODO
-  }
-
-#endif // USE_SENSORLESS
-
 #if TMC_HAS_SPI
   #define SET_CS_PIN(st) OUT_WRITE(st##_CS_PIN, HIGH)
   void tmc_init_cs_pins() {

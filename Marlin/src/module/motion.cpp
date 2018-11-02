@@ -991,31 +991,31 @@ inline float get_homing_bump_feedrate(const AxisEnum axis) {
       default: break;
       #if X_SENSORLESS
         case X_AXIS:
-          tmc_stallguard(stepperX, enable);
+          stepperX.set_sensorless_homing(enable);
           #if CORE_IS_XY && Y_SENSORLESS
-            tmc_stallguard(stepperY, enable);
+            stepperY.set_sensorless_homing(enable);
           #elif CORE_IS_XZ && Z_SENSORLESS
-            tmc_stallguard(stepperZ, enable);
+            stepperZ.set_sensorless_homing(enable);
           #endif
           break;
       #endif
       #if Y_SENSORLESS
         case Y_AXIS:
-          tmc_stallguard(stepperY, enable);
+          stepperY.set_sensorless_homing(enable);
           #if CORE_IS_XY && X_SENSORLESS
-            tmc_stallguard(stepperX, enable);
+            stepperX.set_sensorless_homing(enable);
           #elif CORE_IS_YZ && Z_SENSORLESS
-            tmc_stallguard(stepperZ, enable);
+            stepperZ.set_sensorless_homing(enable);
           #endif
           break;
       #endif
       #if Z_SENSORLESS
         case Z_AXIS:
-          tmc_stallguard(stepperZ, enable);
+          stepperZ.set_sensorless_homing(enable);
           #if CORE_IS_XZ && X_SENSORLESS
-            tmc_stallguard(stepperX, enable);
+            stepperX.set_sensorless_homing(enable);
           #elif CORE_IS_YZ && Y_SENSORLESS
-            tmc_stallguard(stepperY, enable);
+            stepperY.set_sensorless_homing(enable);
           #endif
           break;
       #endif

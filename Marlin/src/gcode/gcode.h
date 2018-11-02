@@ -800,6 +800,7 @@ private:
     #endif
     #if USE_SENSORLESS
       static void M914();
+      static void M916();
     #endif
     #if ENABLED(TMC_Z_CALIBRATION)
       static void M915();

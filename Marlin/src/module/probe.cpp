@@ -538,10 +538,10 @@ static bool do_probe_move(const float z, const float fr_mm_s) {
   // Disable stealthChop if used. Enable diag1 pin on driver.
   #if ENABLED(SENSORLESS_PROBING)
     #if ENABLED(DELTA)
-      tmc_stallguard(stepperX);
-      tmc_stallguard(stepperY);
+      stepperX.set_sensorless_homing(true);
+      stepperY.set_sensorless_homing(true);
     #endif
-    tmc_stallguard(stepperZ);
+    stepperZ.set_sensorless_homing(true);
   #endif
 
   #if QUIET_PROBING
@@ -575,10 +575,10 @@ static bool do_probe_move(const float z, const float fr_mm_s) {
   // Re-enable stealthChop if used. Disable diag1 pin on driver.
   #if ENABLED(SENSORLESS_PROBING)
     #if ENABLED(DELTA)
-      tmc_stallguard(stepperX, false);
-      tmc_stallguard(stepperY, false);
+      stepperX.set_sensorless_homing(false);
+      stepperY.set_sensorless_homing(false);
     #endif
-    tmc_stallguard(stepperZ, false);
+    stepperZ.set_sensorless_homing(false);
   #endif
 
   // Retract BLTouch immediately after a probe if it was triggered

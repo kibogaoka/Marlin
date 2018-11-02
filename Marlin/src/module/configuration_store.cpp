@@ -37,7 +37,7 @@
  */
 
 // Change EEPROM version if the structure changes
-#define EEPROM_VERSION "V62"
+#define EEPROM_VERSION "V63"
 #define EEPROM_OFFSET 100
 
 // Check the integrity of data offsets.
@@ -100,6 +100,7 @@
 typedef struct { uint16_t X, Y, Z, X2, Y2, Z2, Z3, E0, E1, E2, E3, E4, E5; } tmc_stepper_current_t;
 typedef struct { uint32_t X, Y, Z, X2, Y2, Z2, Z3, E0, E1, E2, E3, E4, E5; } tmc_hybrid_threshold_t;
 typedef struct {  int16_t X, Y, Z;                                         } tmc_sgt_t;
+typedef struct {  int16_t X, Y, Z;                                         } tmc_stepper_current_homing_t;
 
 // Limit an index to an array size
 #define ALIM(I,ARR) MIN(I, COUNT(ARR) - 1)
@@ -876,6 +877,25 @@ void MarlinSettings::postprocess() {
     }
 
     //
+    // TMC Sensorless homing currents
+    //
+    {
+      tmc_stepper_current_homing_t tmc_stepper_current_homing = { 0, 0, 0 };
+      #if USE_SENSORLESS
+        #if X_SENSORLESS
+          tmc_stepper_current_homing.X = stepperX.rms_current_homing();
+        #endif
+        #if Y_SENSORLESS
+          tmc_stepper_current_homing.Y = stepperY.rms_current_homing();
+        #endif
+        #if Z_SENSORLESS
+          tmc_stepper_current_homing.Z = stepperZ.rms_current_homing();
+        #endif
+      #endif
+      EEPROM_WRITE(tmc_stepper_current_homing);
+    }
+
+    //
     // Linear Advance
     //
     {
@@ -1501,6 +1521,49 @@ void MarlinSettings::postprocess() {
               #endif
               #if AXIS_HAS_STALLGUARD(Z3)
                 stepperZ3.sgt(tmc_sgt.Z);
+              #endif
+            #endif
+          }
+        #endif
+      }
+
+      //
+      // TMC Sensorless homing stepper current.
+      // X and X2 use the same value
+      // Y and Y2 use the same value
+      // Z, Z2 and Z3 use the same value
+      //
+      {
+        tmc_stepper_current_homing_t homing_currents;
+        _FIELD_TEST(homing_currents);
+        EEPROM_READ(homing_currents);
+        #if USE_SENSORLESS
+          if (!validating) {
+            #ifdef X_HOMING_CURRENT
+              #if AXIS_HAS_STALLGUARD(X)
+                stepperX.rms_current_homing(homing_currents.X);
+              #endif
+              #if AXIS_HAS_STALLGUARD(X2)
+                stepperX2.rms_current_homing(homing_currents.X);
+              #endif
+            #endif
+            #ifdef Y_HOMING_CURRENT
+              #if AXIS_HAS_STALLGUARD(Y)
+                stepperY.rms_current_homing(homing_currents.Y);
+              #endif
+              #if AXIS_HAS_STALLGUARD(Y2)
+                stepperY2.rms_current_homing(homing_currents.Y);;
+              #endif
+            #endif
+            #ifdef Z_HOMING_CURRENT
+              #if AXIS_HAS_STALLGUARD(Z)
+                stepperZ.rms_current_homing(homing_currents.Z);
+              #endif
+              #if AXIS_HAS_STALLGUARD(Z2)
+                stepperZ2.rms_current_homing(homing_currents.Z);
+              #endif
+              #if AXIS_HAS_STALLGUARD(Z3)
+                stepperZ3.rms_current_homing(homing_currents.Z);
               #endif
             #endif
           }
@@ -2817,6 +2880,56 @@ void MarlinSettings::reset(PORTARG_SOLO) {
           say_M914(PORTVAR_SOLO);
           SERIAL_ECHOPGM_P(port, " I2");
           SERIAL_ECHOLNPAIR_P(port, " Z", stepperZ3.sgt());
+        #endif
+
+      #endif // USE_SENSORLESS
+
+      /**
+       * TMC Sensorless homing currents
+       */
+      #if USE_SENSORLESS
+        if (!forReplay) {
+          CONFIG_ECHO_START;
+          SERIAL_ECHOLNPGM_P(port, "TMC2130 Sensorless homing currents:");
+        }
+        CONFIG_ECHO_START;
+        #if X_SENSORLESS || Y_SENSORLESS || Z_SENSORLESS
+          say_M914(PORTVAR_SOLO);
+          #if X_SENSORLESS
+            SERIAL_ECHOPAIR_P(port, " X", stepperX.rms_current_homing());
+          #endif
+          #if Y_SENSORLESS
+            SERIAL_ECHOPAIR_P(port, " Y", stepperY.rms_current_homing());
+          #endif
+          #if Z_SENSORLESS
+            SERIAL_ECHOPAIR_P(port, " Z", stepperZ.rms_current_homing());
+          #endif
+          SERIAL_EOL_P(port);
+        #endif
+
+        #define HAS_X2_SENSORLESS (defined(X_STALL_SENSITIVITY) && AXIS_HAS_STALLGUARD(X2))
+        #define HAS_Y2_SENSORLESS (defined(Y_STALL_SENSITIVITY) && AXIS_HAS_STALLGUARD(Y2))
+        #define HAS_Z2_SENSORLESS (defined(Z_STALL_SENSITIVITY) && AXIS_HAS_STALLGUARD(Z2))
+        #define HAS_Z3_SENSORLESS (defined(Z_STALL_SENSITIVITY) && AXIS_HAS_STALLGUARD(Z3))
+        #if HAS_X2_SENSORLESS || HAS_Y2_SENSORLESS || HAS_Z2_SENSORLESS
+          say_M914(PORTVAR_SOLO);
+          SERIAL_ECHOPGM_P(port, " I1");
+          #if HAS_X2_SENSORLESS
+            SERIAL_ECHOPAIR_P(port, " X", stepperX2.rms_current_homing());
+          #endif
+          #if HAS_Y2_SENSORLESS
+            SERIAL_ECHOPAIR_P(port, " Y", stepperY2.rms_current_homing());
+          #endif
+          #if HAS_Z2_SENSORLESS
+            SERIAL_ECHOPAIR_P(port, " Z", stepperZ2.rms_current_homing());
+          #endif
+          SERIAL_EOL_P(port);
+        #endif
+
+        #if HAS_Z3_SENSORLESS
+          say_M914(PORTVAR_SOLO);
+          SERIAL_ECHOPGM_P(port, " I2");
+          SERIAL_ECHOLNPAIR_P(port, " Z", stepperZ3.rms_current_homing());
         #endif
 
       #endif // USE_SENSORLESS

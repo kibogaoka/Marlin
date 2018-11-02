@@ -106,6 +106,52 @@ class TMCMarlin<TMC2208Stepper, AXIS_LETTER, DRIVER_ID> : public TMC2208Stepper,
       TMC2208Stepper::rms_current(mA, mult);
     }
 };
+template<char AXIS_LETTER, char DRIVER_ID>
+class TMCMarlin<TMC2130Stepper, AXIS_LETTER, DRIVER_ID> : public TMC2130Stepper, public TMCStorage<AXIS_LETTER, DRIVER_ID> {
+  protected:
+  #if USE_SENSORLESS
+    uint16_t val_mA_homing = 0;
+    bool is_sensorless_homing = false;
+  #endif // USE_SENSORLESS
+  public:
+    TMCMarlin(uint16_t cs_pin, float RS) :
+      TMC2130Stepper(cs_pin, RS)
+      {}
+    TMCMarlin(uint16_t CS, float RS, uint16_t pinMOSI, uint16_t pinMISO, uint16_t pinSCK) :
+      TMC2130Stepper(CS, RS, pinMOSI, pinMISO, pinSCK)
+      {}
+    uint16_t rms_current() { return this->val_mA; }
+    void rms_current(uint16_t mA) {
+      this->val_mA = mA;
+      TMC2130Stepper::rms_current(mA);
+    }
+    void rms_current(uint16_t mA, float mult) {
+      this->val_mA = mA;
+      TMC2130Stepper::rms_current(mA, mult);
+    }
+    #if USE_SENSORLESS
+    uint16_t rms_current_homing() {
+      return this->val_mA_homing;
+    }
+    void rms_current_homing(uint16_t mA) {
+      this->val_mA_homing = mA;
+      if (this->is_sensorless_homing) {
+        TMC2130Stepper::rms_current(mA);
+      }
+    }
+    void set_sensorless_homing(bool enable) {
+      if (this->is_sensorless_homing != enable) {
+        this->is_sensorless_homing = enable;
+        TMC2130Stepper::rms_current(enable ? this->val_mA_homing : this->val_mA);
+        this->TCOOLTHRS(enable ? 0xFFFFF : 0);
+        #if ENABLED(STEALTHCHOP)
+          this->en_pwm_mode(!enable);
+        #endif
+        this->diag1_stall(enable ? 1 : 0);
+      }
+    }
+    #endif // USE_SENSORLESS
+};
 
 constexpr uint32_t _tmc_thrs(const uint16_t msteps, const int32_t thrs, const uint32_t spmm) {
   return 12650000UL * msteps / (256 * thrs * spmm);
@@ -154,6 +200,15 @@ template<typename TMC>
 void tmc_set_sgt(TMC &st, const int8_t sgt_val) {
   st.sgt(sgt_val);
 }
+template<typename TMC>
+void tmc_get_homing_current(TMC &st) {
+  st.printLabel();
+  SERIAL_ECHOLNPAIR(" sensorless homing driver current: ", st.rms_current_homing());
+}
+template<typename TMC>
+void tmc_set_homing_current(TMC &st, const int mA) {
+  st.rms_current_homing(mA);
+}
 
 void monitor_tmc_driver();
 
@@ -162,18 +217,6 @@ void monitor_tmc_driver();
     void tmc_set_report_status(const bool status);
   #endif
   void tmc_report_all();
-#endif
-
-/**
- * TMC2130 specific sensorless homing using stallGuard2.
- * stallGuard2 only works when in spreadCycle mode.
- * spreadCycle and stealthChop are mutually exclusive.
- *
- * Defined here because of limitations with templates and headers.
- */
-#if USE_SENSORLESS
-  void tmc_stallguard(TMC2130Stepper &st, const bool enable=true);
-  void tmc_stallguard(TMC2660Stepper &st, const bool enable=true);
 #endif
 
 #if TMC_HAS_SPI

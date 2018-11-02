@@ -649,28 +649,35 @@ void reset_stepper_drivers() {
     #if X_SENSORLESS
       #if AXIS_HAS_STALLGUARD(X)
         stepperX.sgt(X_STALL_SENSITIVITY);
+        stepperX.rms_current_homing(X_HOMING_CURRENT);
       #endif
       #if AXIS_HAS_STALLGUARD(X2)
         stepperX2.sgt(X_STALL_SENSITIVITY);
+        stepperX2.rms_current_homing(X_HOMING_CURRENT);
       #endif
     #endif
     #if Y_SENSORLESS
       #if AXIS_HAS_STALLGUARD(Y)
         stepperY.sgt(Y_STALL_SENSITIVITY);
+        stepperY.rms_current_homing(Y_HOMING_CURRENT);
       #endif
       #if AXIS_HAS_STALLGUARD(Y2)
         stepperY2.sgt(Y_STALL_SENSITIVITY);
+        stepperY2.rms_current_homing(Y_HOMING_CURRENT);
       #endif
     #endif
     #if Z_SENSORLESS
       #if AXIS_HAS_STALLGUARD(Z)
         stepperZ.sgt(Z_STALL_SENSITIVITY);
+        stepperZ.rms_current_homing(Z_HOMING_CURRENT);
       #endif
       #if AXIS_HAS_STALLGUARD(Z2)
         stepperZ2.sgt(Z_STALL_SENSITIVITY);
+        stepperZ2.rms_current_homing(Z_HOMING_CURRENT);
       #endif
       #if AXIS_HAS_STALLGUARD(Z3)
         stepperZ3.sgt(Z_STALL_SENSITIVITY);
+        stepperZ3.rms_current_homing(Z_HOMING_CURRENT);
       #endif
     #endif
   #endif

@@ -398,6 +398,87 @@
     SERIAL_ECHOLNPGM("\nHoming Z because we lost steps");
     enqueue_and_echo_commands_P(PSTR("G28 Z"));
   }
-#endif
+#endif // ENABLED(TMC_Z_CALIBRATION)
+
+/**
+ * M916: Set sensorless homing stepper currents.
+ */
+#if USE_SENSORLESS
+  void GcodeSuite::M916() {
+    #define TMC_SAY_HOMING_CURRENT(Q) tmc_get_homing_current(stepper##Q)
+    #define TMC_SET_HOMING_CURRENT(Q) tmc_set_homing_current(stepper##Q, value)
+
+    bool report = true;
+    const uint8_t index = parser.byteval('I');
+    LOOP_XYZ(i) if (uint16_t value = parser.intval(axis_codes[i])) {
+      report = false;
+      switch (i) {
+        #if X_SENSORLESS
+          case X_AXIS:
+            #if AXIS_HAS_STALLGUARD(X)
+              if (index < 2) TMC_SET_HOMING_CURRENT(X);
+            #endif
+            #if AXIS_HAS_STALLGUARD(X2)
+              if (!(index & 1)) TMC_SET_HOMING_CURRENT(X2);
+            #endif
+            break;
+        #endif
+        #if Y_SENSORLESS
+          case Y_AXIS:
+            #if AXIS_HAS_STALLGUARD(Y)
+              if (index < 2) TMC_SET_HOMING_CURRENT(Y);
+            #endif
+            #if AXIS_HAS_STALLGUARD(Y2)
+              if (!(index & 1)) TMC_SET_HOMING_CURRENT(Y2);
+            #endif
+            break;
+        #endif
+        #if Z_SENSORLESS
+          case Z_AXIS:
+            #if AXIS_HAS_STALLGUARD(Z)
+              if (index < 2) TMC_SET_HOMING_CURRENT(Z);
+            #endif
+            #if AXIS_HAS_STALLGUARD(Z2)
+              if (index == 0 || index == 2) TMC_SET_HOMING_CURRENT(Z2);
+            #endif
+            #if AXIS_HAS_STALLGUARD(Z3)
+              if (index == 0 || index == 3) TMC_SET_HOMING_CURRENT(Z3);
+            #endif
+            break;
+        #endif
+      }
+    }
+
+    if (report) {
+      #if X_SENSORLESS
+        #if AXIS_HAS_STALLGUARD(X)
+          TMC_SAY_HOMING_CURRENT(X);
+        #endif
+        #if AXIS_HAS_STALLGUARD(X2)
+          TMC_SAY_HOMING_CURRENT(X2);
+        #endif
+      #endif
+      #if Y_SENSORLESS
+        #if AXIS_HAS_STALLGUARD(Y)
+          TMC_SAY_HOMING_CURRENT(Y);
+        #endif
+        #if AXIS_HAS_STALLGUARD(Y2)
+          TMC_SAY_HOMING_CURRENT(Y2);
+        #endif
+      #endif
+      #if Z_SENSORLESS
+        #if AXIS_HAS_STALLGUARD(Z)
+          TMC_SAY_HOMING_CURRENT(Z);
+        #endif
+        #if AXIS_HAS_STALLGUARD(Z2)
+          TMC_SAY_HOMING_CURRENT(Z2);
+        #endif
+        #if AXIS_HAS_STALLGUARD(Z3)
+          TMC_SAY_HOMING_CURRENT(Z3);
+        #endif
+      #endif
+    }
+  }
+#endif // USE_SENSORLESS
 
 #endif // HAS_TRINAMIC
