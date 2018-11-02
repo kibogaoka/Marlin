@@ -1331,8 +1331,8 @@
   #if ENABLED(SENSORLESS_HOMING) || ENABLED(SENSORLESS_PROBING)
     #define X_STALL_SENSITIVITY  3
     #define Y_STALL_SENSITIVITY  3
-    #define X_HOMING_CURRENT     300
-    #define Y_HOMING_CURRENT     300
+    #define X_HOMING_CURRENT     400
+    #define Y_HOMING_CURRENT     400
   #endif
 
   /**
