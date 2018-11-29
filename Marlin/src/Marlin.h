@@ -19,8 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef __MARLIN_H__
-#define __MARLIN_H__
+#pragma once
 
 #include "inc/MarlinConfig.h"
 
@@ -211,11 +210,12 @@ extern millis_t max_inactive_time, stepper_inactive_time;
     extern bool fans_paused;
     extern uint8_t paused_fan_speed[FAN_COUNT];
   #endif
+  #define FANS_LOOP(I) LOOP_L_N(I, FAN_COUNT)
 #endif
 
 inline void zero_fan_speeds() {
   #if FAN_COUNT > 0
-    LOOP_L_N(i, FAN_COUNT) fan_speed[i] = 0;
+    FANS_LOOP(i) fan_speed[i] = 0;
   #endif
 }
 
@@ -242,5 +242,3 @@ void protected_pin_err();
 #if HAS_SUICIDE
   inline void suicide() { OUT_WRITE(SUICIDE_PIN, LOW); }
 #endif
-
-#endif // __MARLIN_H__
